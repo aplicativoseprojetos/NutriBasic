@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>NutriBasic — Gerador Inteligente de Cardápios e Meal Prep</title>
+  <title>NutriBasic PRO — Gerador Inteligente de Cardápios e Meal Prep</title>
   
   <!-- PWA Meta Tags -->
   <link rel="manifest" href="manifest.json" />
@@ -28,7 +28,8 @@
           colors: {
             forest: { 900: '#143329', 800: '#1b4336', 700: '#2b6653', 600: '#357a64', 100: '#e6f0ec', 50: '#f2f7f5' },
             slateblue: { 800: '#2d4452', 700: '#3d5a6c', 600: '#4e7187', 100: '#e8eff3', 50: '#f3f7f9' },
-            surface: '#f6f8f7', bordersoft: '#d3dfda',
+            surface: '#f6f8f7',
+            bordersoft: '#d3dfda',
           }
         }
       }
@@ -54,6 +55,31 @@
     </div>
   </div>
 
+  <!-- Modal de Troca de Refeição -->
+  <div id="swap-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl border border-bordersoft max-w-lg w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="bg-forest-800 text-white px-5 py-4 flex items-center justify-between">
+        <div>
+          <span id="swap-modal-slot" class="text-[11px] uppercase tracking-wider text-emerald-200 font-bold block">Trocar Refeição</span>
+          <h3 class="text-base font-extrabold">Opções Compatíveis com sua Despensa</h3>
+        </div>
+        <button type="button" onclick="closeSwapModal()" class="text-emerald-100 hover:text-white bg-forest-700 p-1.5 rounded-lg">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div class="p-4 overflow-y-auto space-y-3 flex-1" id="swap-modal-list">
+        <!-- Injetado via JS -->
+      </div>
+      <div class="bg-surface px-5 py-3 border-t border-bordersoft flex justify-end">
+        <button type="button" onclick="closeSwapModal()" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-200 text-slate-700 hover:bg-slate-300 transition">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Header -->
   <header class="bg-forest-800 text-white shadow-md sticky top-0 z-30">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
@@ -66,543 +92,1813 @@
         <div>
           <div class="flex items-center gap-2">
             <h1 class="text-lg sm:text-xl font-extrabold tracking-tight leading-none">NutriBasic</h1>
-            <span class="text-[11px] font-semibold uppercase tracking-wider bg-forest-700 text-emerald-200 px-2 py-0.5 rounded-full border border-forest-600">Pro</span>
+            <span class="text-[11px] font-semibold uppercase tracking-wider bg-forest-700 text-emerald-200 px-2 py-0.5 rounded-full border border-forest-600">PRO</span>
           </div>
-          <p class="text-xs text-emerald-100/80 mt-0.5">Motor Nutricional Inteligente</p>
+          <p class="text-xs text-emerald-100/80 mt-0.5">Gerador Inteligente de Cardápios &amp; Meal Prep</p>
         </div>
       </div>
       <div class="flex items-center gap-2">
-        <button id="toggle-config-btn" type="button" onclick="toggleConfigPanel()" class="lg:hidden inline-flex items-center gap-1.5 bg-forest-700 hover:bg-forest-600 text-white text-xs font-semibold px-3 py-2.5 rounded-xl border border-forest-600 transition">
+        <button type="button" onclick="toggleConfigPanel()" class="lg:hidden inline-flex items-center gap-1.5 bg-forest-700 hover:bg-forest-600 text-white text-xs font-semibold px-3 py-2 rounded-xl border border-forest-600 transition">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
-          <span>Perfil</span>
+          <span>Perfil &amp; Despensa</span>
+        </button>
+        <button type="button" onclick="randomizeMenuVariation()" class="inline-flex items-center gap-1.5 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-semibold px-3 py-2 rounded-xl border border-emerald-500 transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+          <span class="hidden sm:inline">Nova Variação</span>
+        </button>
+        <button type="button" onclick="resetDefaultProfile()" class="inline-flex items-center gap-1.5 bg-forest-900/70 hover:bg-forest-900 text-emerald-100 text-xs font-semibold px-3 py-2 rounded-xl border border-forest-600 transition">
+          <span>Restaurar Padrão</span>
         </button>
       </div>
     </div>
   </header>
 
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-5">
-    <!-- Metas Dashboard -->
-    <section aria-label="Resumo Nutricional" class="mb-6">
-      <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-        <div class="flex items-center gap-2">
-          <span class="w-2.5 h-2.5 rounded-full bg-forest-700"></span>
-          <h2 class="text-xs font-bold uppercase tracking-wider text-forest-800">Motor Nutricional em Tempo Real</h2>
-        </div>
-        <div class="text-xs text-slate-600 bg-white px-3 py-1 rounded-full border border-bordersoft tabular-nums">
-          TMB: <strong id="display-bmr" class="text-forest-800">...</strong> &bull; GET: <strong id="display-tdee" class="text-forest-800">...</strong>
-        </div>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Train Card -->
-        <div class="bg-white rounded-2xl border border-bordersoft shadow-sm overflow-hidden flex flex-col justify-between">
-          <div class="bg-forest-800 text-white px-4 py-2.5 flex items-center justify-between">
-            <span class="text-xs font-bold uppercase tracking-wider">Dias de Treino (Seg a Sex)</span>
-            <span class="text-[11px] bg-forest-700 px-2 py-0.5 rounded-full font-medium" id="badge-goal-label">Recomposição</span>
-          </div>
-          <div class="p-4">
-            <div class="flex items-baseline justify-between mb-3">
-              <div class="text-2xl sm:text-3xl font-extrabold text-forest-800 tabular-nums" id="summary-train-kcal">...</div>
-              <div class="text-xs font-semibold text-forest-700 bg-forest-50 px-2.5 py-1 rounded-lg border border-forest-100 tabular-nums" id="summary-train-delta">...</div>
-            </div>
-            <div class="grid grid-cols-3 gap-2 pt-2.5 border-t border-slate-100 text-center">
-              <div class="bg-forest-50/70 rounded-xl p-2">
-                <div class="text-[11px] font-medium text-slate-500">Proteína</div>
-                <div class="text-sm font-extrabold text-forest-800 tabular-nums" id="summary-train-p">...</div>
-                <div class="text-[10px] font-semibold text-forest-700 tabular-nums" id="summary-train-pkg">...</div>
-              </div>
-              <div class="bg-slate-50 rounded-xl p-2">
-                <div class="text-[11px] font-medium text-slate-500">Carboidrato</div>
-                <div class="text-sm font-extrabold text-slate-800 tabular-nums" id="summary-train-c">...</div>
-              </div>
-              <div class="bg-slate-50 rounded-xl p-2">
-                <div class="text-[11px] font-medium text-slate-500">Gordura</div>
-                <div class="text-sm font-extrabold text-slate-800 tabular-nums" id="summary-train-f">...</div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- Rest Card -->
-        <div class="bg-white rounded-2xl border border-bordersoft shadow-sm overflow-hidden flex flex-col justify-between">
-          <div class="bg-slateblue-700 text-white px-4 py-2.5 flex items-center justify-between">
-            <span class="text-xs font-bold uppercase tracking-wider">Dias de Descanso (Sáb e Dom)</span>
-            <span class="text-[11px] bg-slateblue-800 px-2 py-0.5 rounded-full font-medium">Carb Cycling</span>
-          </div>
-          <div class="p-4">
-            <div class="flex items-baseline justify-between mb-3">
-              <div class="text-2xl sm:text-3xl font-extrabold text-slateblue-700 tabular-nums" id="summary-rest-kcal">...</div>
-              <div class="text-xs font-semibold text-slateblue-700 bg-slateblue-50 px-2.5 py-1 rounded-lg border border-slateblue-100">Queima Ativa</div>
-            </div>
-            <div class="grid grid-cols-3 gap-2 pt-2.5 border-t border-slate-100 text-center">
-              <div class="bg-slateblue-50/80 rounded-xl p-2">
-                <div class="text-[11px] font-medium text-slate-500">Proteína</div>
-                <div class="text-sm font-extrabold text-slateblue-700 tabular-nums" id="summary-rest-p">...</div>
-                <div class="text-[10px] font-semibold text-slateblue-600 tabular-nums" id="summary-rest-pkg">...</div>
-              </div>
-              <div class="bg-slate-50 rounded-xl p-2">
-                <div class="text-[11px] font-medium text-slate-500">Carboidrato</div>
-                <div class="text-sm font-extrabold text-slate-800 tabular-nums" id="summary-rest-c">...</div>
-              </div>
-              <div class="bg-slate-50 rounded-xl p-2">
-                <div class="text-[11px] font-medium text-slate-500">Gordura</div>
-                <div class="text-sm font-extrabold text-slate-800 tabular-nums" id="summary-rest-f">...</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Layout Dividido -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
       
-      <!-- LADO ESQUERDO: Configurações -->
+      <!-- LADO ESQUERDO: PAINEL COMPLETO DE CONFIGURAÇÃO E DESPENSA -->
       <aside id="config-panel" class="hidden lg:block lg:col-span-4 bg-white rounded-2xl border border-bordersoft shadow-sm overflow-hidden">
         <div class="bg-forest-800 text-white px-4 py-3.5 flex items-center justify-between">
-          <h2 class="text-sm font-bold tracking-tight">Perfil & Despensa</h2>
+          <h2 class="text-sm font-bold tracking-tight">Configuração Individual</h2>
           <button type="button" onclick="toggleConfigPanel()" class="lg:hidden text-xs bg-forest-700 px-2.5 py-1 rounded-lg">Fechar</button>
         </div>
-        <form id="profile-form" onsubmit="handleGeneratePlan(event)" class="p-4 space-y-5">
-          <!-- Dados base -->
+
+        <form id="profile-form" onsubmit="handleFormSubmit(event)" class="p-4 space-y-5">
+          <!-- 1. Dados Corporais -->
           <div>
+            <div class="flex items-center gap-2 mb-2.5">
+              <span class="w-5 h-5 rounded-full bg-forest-100 text-forest-800 text-xs font-extrabold flex items-center justify-center">1</span>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-forest-800">Dados Corporais</h3>
+            </div>
             <div class="grid grid-cols-2 gap-2.5">
               <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1">Peso (kg)</label>
-                <input id="input-weight" type="number" step="0.5" value="106" class="w-full rounded-xl border border-bordersoft bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-forest-700" />
+                <label class="block text-xs font-medium text-slate-600 mb-1">Sexo</label>
+                <select id="input-sex" onchange="onProfileInputChange()" class="w-full rounded-xl border border-bordersoft bg-surface px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-forest-700">
+                  <option value="M">Masculino</option>
+                  <option value="F">Feminino</option>
+                </select>
               </div>
               <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1">Proteína (g/kg)</label>
-                <input id="input-protein-ratio" type="number" step="0.1" value="2.1" class="w-full rounded-xl border border-bordersoft bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-forest-700" />
+                <label class="block text-xs font-medium text-slate-600 mb-1">Idade (anos)</label>
+                <input id="input-age" type="number" min="14" max="90" value="42" oninput="onProfileInputChange()" class="w-full rounded-xl border border-bordersoft bg-surface px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-forest-700" />
               </div>
-              <div class="col-span-2">
-                <label class="block text-xs font-medium text-slate-600 mb-1">Objetivo Principal</label>
-                <select id="input-goal" class="w-full rounded-xl border border-bordersoft bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-forest-700">
-                  <option value="cut">Emagrecimento (Déficit)</option>
-                  <option value="recomp" selected>Recomposição Corporal</option>
-                  <option value="bulk">Hipertrofia Limpa</option>
-                </select>
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Altura (cm)</label>
+                <input id="input-height" type="number" min="130" max="220" value="182" oninput="onProfileInputChange()" class="w-full rounded-xl border border-bordersoft bg-surface px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-forest-700" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Peso (kg)</label>
+                <input id="input-weight" type="number" step="0.5" min="40" max="220" value="106" oninput="onProfileInputChange()" class="w-full rounded-xl border border-bordersoft bg-surface px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-forest-700" />
               </div>
             </div>
           </div>
-          <!-- Despensa Reativa -->
+
+          <!-- 2. Objetivo & Horário de Treino -->
           <div class="pt-3 border-t border-slate-100">
-            <h3 class="text-xs font-bold uppercase tracking-wider text-forest-800 mb-2">Despensa (Filtro Imediato)</h3>
-            <p class="text-[11px] text-slate-500 mb-2.5">Desmarque para excluir do cardápio e recalcular opções:</p>
+            <div class="flex items-center gap-2 mb-2.5">
+              <span class="w-5 h-5 rounded-full bg-forest-100 text-forest-800 text-xs font-extrabold flex items-center justify-center">2</span>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-forest-800">Objetivo &amp; Treino</h3>
+            </div>
+            <div class="space-y-2.5">
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Objetivo Principal</label>
+                <select id="input-goal" onchange="onProfileInputChange()" class="w-full rounded-xl border border-bordersoft bg-surface px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-forest-700">
+                  <option value="cut">Emagrecimento Acelerado (Déficit agressivo)</option>
+                  <option value="recomp" selected>Recomposição Corporal (Perder gordura + Ganhar massa)</option>
+                  <option value="bulk">Hipertrofia Limpa (Superávit controlado)</option>
+                </select>
+              </div>
+              <div class="grid grid-cols-2 gap-2.5">
+                <div>
+                  <label class="block text-xs font-medium text-slate-600 mb-1">Musculação / Semana</label>
+                  <select id="input-freq" onchange="onProfileInputChange()" class="w-full rounded-xl border border-bordersoft bg-surface px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-forest-700">
+                    <option value="0">Sedentário (0x)</option>
+                    <option value="3">2 a 3x / sem</option>
+                    <option value="5" selected>4 a 5x / sem</option>
+                    <option value="6">6x / sem</option>
+                  </select>
+                </div>
+                <div id="workout-time-wrapper">
+                  <label class="block text-xs font-medium text-slate-600 mb-1">Horário do Treino</label>
+                  <select id="input-workout-time" onchange="onProfileInputChange()" class="w-full rounded-xl border border-bordersoft bg-surface px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-forest-700">
+                    <option value="manha">Manhã (06h–08h)</option>
+                    <option value="almoco">Almoço (12h–13h)</option>
+                    <option value="tarde" selected>Tarde (15h–16h)</option>
+                    <option value="noite">Noite (19h–20h)</option>
+                  </select>
+                </div>
+              </div>
+              <div class="pt-1">
+                <div class="flex justify-between items-center mb-1">
+                  <label class="text-xs font-medium text-slate-600">Meta Proteica Diária</label>
+                  <span id="protein-slider-label" class="text-xs font-extrabold text-forest-800 bg-forest-100 px-2 py-0.5 rounded-md tabular-nums">2,1 g/kg</span>
+                </div>
+                <input id="input-protein-ratio" type="range" min="1.6" max="2.4" step="0.1" value="2.1" oninput="onProfileInputChange()" class="w-full cursor-pointer" />
+                <div class="flex justify-between text-[10px] text-slate-400 font-medium">
+                  <span>1,6 g/kg</span>
+                  <span>2,0 g/kg</span>
+                  <span>2,4 g/kg</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Estilo de Rotina & Regras -->
+          <div class="pt-3 border-t border-slate-100">
+            <div class="flex items-center gap-2 mb-2.5">
+              <span class="w-5 h-5 rounded-full bg-forest-100 text-forest-800 text-xs font-extrabold flex items-center justify-center">3</span>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-forest-800">Estilo de Rotina &amp; Preparo</h3>
+            </div>
+            <div class="space-y-2.5">
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Logística do Dia a Dia</label>
+                <select id="input-routine" onchange="onProfileInputChange()" class="w-full rounded-xl border border-bordersoft bg-surface px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-forest-700">
+                  <option value="misto" selected>Rua + Almoço Buffet / Self-Service</option>
+                  <option value="rua_total">100% na Rua (Marmita Fria / Portátil)</option>
+                  <option value="casa">Em Casa / Home Office (Pratos Quentes)</option>
+                </select>
+              </div>
+              <label class="flex items-center gap-2.5 text-xs font-medium text-slate-700 cursor-pointer bg-surface p-2.5 rounded-xl border border-bordersoft">
+                <input id="input-low-oil" type="checkbox" checked onchange="onProfileInputChange()" class="rounded text-forest-700 focus:ring-forest-700 w-4 h-4" />
+                <span>Preparo sem óleo no café e mínimo azeite (2ml)</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- 4. Despensa Interativa (Filtro Estrito) -->
+          <div class="pt-3 border-t border-slate-100">
+            <div class="flex items-center justify-between mb-1">
+              <div class="flex items-center gap-2">
+                <span class="w-5 h-5 rounded-full bg-forest-100 text-forest-800 text-xs font-extrabold flex items-center justify-center">4</span>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-forest-800">Despensa Ativa</h3>
+              </div>
+              <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">Filtro Estrito</span>
+            </div>
+            <p class="text-[11px] text-slate-500 mb-2.5">Clique para ativar/remover. Itens desmarcados desaparecem 100% do cardápio na hora:</p>
             <div id="pantry-chips-container" class="flex flex-wrap gap-1.5">
               <!-- Gerado via JS -->
             </div>
           </div>
+
           <button type="submit" class="w-full bg-forest-800 hover:bg-forest-700 text-white font-bold text-sm py-3 px-4 rounded-xl shadow-md transition">
-            Recalcular Tudo
+            Atualizar Cardápio Personalizado
           </button>
         </form>
       </aside>
 
-      <!-- LADO DIREITO: Cardápio Dinâmico -->
-      <div class="lg:col-span-8">
-        <div class="bg-white p-3 rounded-2xl border border-bordersoft shadow-sm mb-4 flex overflow-x-auto no-scrollbar gap-1.5" id="day-selector-bar">
-          <!-- Gerado via JS -->
+      <!-- LADO DIREITO: MOTOR NUTRICIONAL, HIDRATAÇÃO E ABAS -->
+      <div class="lg:col-span-8 space-y-5">
+        
+        <!-- Resumo Nutricional -->
+        <section aria-label="Resumo Nutricional">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-forest-700"></span>
+              <h2 class="text-xs font-bold uppercase tracking-wider text-forest-800">Motor Nutricional em Tempo Real</h2>
+            </div>
+            <div class="text-xs text-slate-600 bg-white px-3 py-1 rounded-full border border-bordersoft tabular-nums">
+              TMB (Mifflin-St Jeor): <strong id="display-bmr" class="text-forest-800">...</strong> &bull; Gasto Total (GET): <strong id="display-tdee" class="text-forest-800">...</strong>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Card Dias de Treino / Ativos -->
+            <div class="bg-white rounded-2xl border border-bordersoft shadow-sm overflow-hidden flex flex-col justify-between">
+              <div class="bg-forest-800 text-white px-4 py-2.5 flex items-center justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider" id="train-card-title">Dias de Treino (Seg a Sex)</span>
+                <span class="text-[11px] bg-forest-700 px-2 py-0.5 rounded-full font-medium" id="badge-goal-label">Recomposição</span>
+              </div>
+              <div class="p-4">
+                <div class="flex items-baseline justify-between mb-3">
+                  <div class="text-2xl sm:text-3xl font-extrabold text-forest-800 tabular-nums" id="summary-train-kcal">...</div>
+                  <div class="text-xs font-semibold text-forest-700 bg-forest-50 px-2.5 py-1 rounded-lg border border-forest-100 tabular-nums" id="summary-train-delta">...</div>
+                </div>
+                <div class="grid grid-cols-3 gap-2 pt-2.5 border-t border-slate-100 text-center">
+                  <div class="bg-forest-50/70 rounded-xl p-2">
+                    <div class="text-[11px] font-medium text-slate-500">Proteína</div>
+                    <div class="text-sm font-extrabold text-forest-800 tabular-nums" id="summary-train-p">...</div>
+                    <div class="text-[10px] font-semibold text-forest-700 tabular-nums" id="summary-train-pkg">...</div>
+                  </div>
+                  <div class="bg-slate-50 rounded-xl p-2">
+                    <div class="text-[11px] font-medium text-slate-500">Carboidrato</div>
+                    <div class="text-sm font-extrabold text-slate-800 tabular-nums" id="summary-train-c">...</div>
+                    <div class="text-[10px] text-slate-500">Energia</div>
+                  </div>
+                  <div class="bg-slate-50 rounded-xl p-2">
+                    <div class="text-[11px] font-medium text-slate-500">Gordura</div>
+                    <div class="text-sm font-extrabold text-slate-800 tabular-nums" id="summary-train-f">...</div>
+                    <div class="text-[10px] text-slate-500" id="summary-oil-tag">Mín. azeite</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card Dias de Descanso -->
+            <div class="bg-white rounded-2xl border border-bordersoft shadow-sm overflow-hidden flex flex-col justify-between">
+              <div class="bg-slateblue-700 text-white px-4 py-2.5 flex items-center justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider" id="rest-card-title">Dias de Descanso (Sáb e Dom)</span>
+                <span class="text-[11px] bg-slateblue-800 px-2 py-0.5 rounded-full font-medium">Carb Cycling</span>
+              </div>
+              <div class="p-4">
+                <div class="flex items-baseline justify-between mb-3">
+                  <div class="text-2xl sm:text-3xl font-extrabold text-slateblue-700 tabular-nums" id="summary-rest-kcal">...</div>
+                  <div class="text-xs font-semibold text-slateblue-700 bg-slateblue-50 px-2.5 py-1 rounded-lg border border-slateblue-100">Queima Ativa</div>
+                </div>
+                <div class="grid grid-cols-3 gap-2 pt-2.5 border-t border-slate-100 text-center">
+                  <div class="bg-slateblue-50/80 rounded-xl p-2">
+                    <div class="text-[11px] font-medium text-slate-500">Proteína</div>
+                    <div class="text-sm font-extrabold text-slateblue-700 tabular-nums" id="summary-rest-p">...</div>
+                    <div class="text-[10px] font-semibold text-slateblue-600 tabular-nums" id="summary-rest-pkg">...</div>
+                  </div>
+                  <div class="bg-slate-50 rounded-xl p-2">
+                    <div class="text-[11px] font-medium text-slate-500">Carboidrato</div>
+                    <div class="text-sm font-extrabold text-slate-800 tabular-nums" id="summary-rest-c">...</div>
+                    <div class="text-[10px] text-slate-500">Reduzido</div>
+                  </div>
+                  <div class="bg-slate-50 rounded-xl p-2">
+                    <div class="text-[11px] font-medium text-slate-500">Gordura</div>
+                    <div class="text-sm font-extrabold text-slate-800 tabular-nums" id="summary-rest-f">...</div>
+                    <div class="text-[10px] text-slate-500">Saciedade</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Meta de Hidratação Diária -->
+        <section class="bg-white rounded-2xl border border-bordersoft shadow-sm overflow-hidden">
+          <div class="bg-forest-700 text-white px-4 py-2 flex items-center justify-between">
+            <span class="text-xs font-bold uppercase tracking-wider">Meta de Hidratação Diária</span>
+            <span class="text-[11px] bg-forest-800 px-2.5 py-0.5 rounded-full font-semibold">35–40 ml/kg</span>
+          </div>
+          <div class="p-4">
+            <div class="flex items-center justify-between mb-3">
+              <div>
+                <div class="text-xl font-extrabold text-forest-900 tabular-nums" id="hydration-target-text">3,7 a 4,2 L</div>
+                <div class="text-xs text-slate-500 mt-0.5" id="hydration-status-text">Registrado hoje: <strong class="text-forest-800">0,0 L</strong></div>
+              </div>
+              <button type="button" onclick="resetHydration()" class="text-xs font-semibold text-slate-500 hover:text-forest-800 underline">Zerar</button>
+            </div>
+            <div id="hydration-bottles" class="grid grid-cols-4 sm:grid-cols-8 gap-2">
+              <!-- Garrafas geradas via JS -->
+            </div>
+          </div>
+        </section>
+
+        <!-- Navegação de Abas Principais -->
+        <div class="bg-white p-1.5 rounded-2xl border border-bordersoft shadow-sm grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+          <button type="button" onclick="switchTab('cardapio')" id="tab-btn-cardapio" class="py-2.5 px-3 rounded-xl text-xs font-extrabold transition flex items-center justify-center gap-1.5 bg-forest-800 text-white">
+            <span>📅 Cardápio Semanal</span>
+          </button>
+          <button type="button" onclick="switchTab('mealprep')" id="tab-btn-mealprep" class="py-2.5 px-3 rounded-xl text-xs font-extrabold transition flex items-center justify-center gap-1.5 text-slate-600 hover:bg-surface">
+            <span>⏱️ Meal Prep (1h)</span>
+          </button>
+          <button type="button" onclick="switchTab('compras')" id="tab-btn-compras" class="py-2.5 px-3 rounded-xl text-xs font-extrabold transition flex items-center justify-center gap-1.5 text-slate-600 hover:bg-surface">
+            <span>🛒 Lista de Compras</span>
+          </button>
+          <button type="button" onclick="switchTab('guiarua')" id="tab-btn-guiarua" class="py-2.5 px-3 rounded-xl text-xs font-extrabold transition flex items-center justify-center gap-1.5 text-slate-600 hover:bg-surface">
+            <span>🛡️ Guia de Rua</span>
+          </button>
         </div>
-        <div id="menu-render-area" class="space-y-4">
-          <!-- Cardápio inserido dinamicamente aqui -->
+
+        <!-- CONTEÚDO DA ABA 1: CARDÁPIO SEMANAL -->
+        <div id="tab-content-cardapio" class="space-y-4">
+          <div class="bg-white p-2.5 rounded-2xl border border-bordersoft shadow-sm flex flex-wrap items-center justify-between gap-2">
+            <div class="flex overflow-x-auto no-scrollbar gap-1.5" id="day-selector-bar">
+              <!-- Botões Seg a Dom -->
+            </div>
+            <button type="button" onclick="toggleAllDaysView()" id="btn-view-all-days" class="px-3 py-1.5 rounded-xl text-xs font-bold border border-bordersoft bg-surface text-slate-700 hover:bg-slate-100 transition shrink-0">
+              ☰ Visualizar Semana Completa (7 dias)
+            </button>
+          </div>
+
+          <div id="menu-render-area" class="space-y-5">
+            <!-- Cardápios renderizados via JS -->
+          </div>
         </div>
+
+        <!-- CONTEÚDO DA ABA 2: MEAL PREP (1H NO DOMINGO) -->
+        <div id="tab-content-mealprep" class="hidden space-y-4">
+          <div class="bg-white rounded-2xl border border-bordersoft p-5 shadow-sm">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3 mb-4">
+              <div>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-forest-700 bg-forest-50 px-2.5 py-0.5 rounded-full">Roteiro Cronometrado Dinâmico</span>
+                <h3 class="text-lg font-extrabold text-slate-900 mt-1">Meal Prep de 1 Hora no Domingo</h3>
+                <p class="text-xs text-slate-500">Calculado exclusivamente com as proteínas e lanches presentes no seu cardápio atual.</p>
+              </div>
+            </div>
+            <div id="mealprep-steps-area" class="space-y-3">
+              <!-- Passos dinâmicos gerados via JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- CONTEÚDO DA ABA 3: LISTA DE COMPRAS -->
+        <div id="tab-content-compras" class="hidden space-y-4">
+          <div class="bg-white rounded-2xl border border-bordersoft p-5 shadow-sm">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 mb-4">
+              <div>
+                <h3 class="text-lg font-extrabold text-slate-900">Lista de Compras da Semana (7 Dias)</h3>
+                <p class="text-xs text-slate-500">Quantidades somadas a partir do seu cardápio atual (já convertidas para peso bruto de compra).</p>
+              </div>
+              <button type="button" onclick="copyShoppingList()" class="bg-forest-800 hover:bg-forest-700 text-white text-xs font-bold px-3.5 py-2.5 rounded-xl transition flex items-center gap-1.5">
+                <span>📋 Copiar para WhatsApp</span>
+              </button>
+            </div>
+            <div id="shopping-list-area" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- Categorias de compras geradas via JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- CONTEÚDO DA ABA 4: GUIA DE RUA -->
+        <div id="tab-content-guiarua" class="hidden space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-white rounded-2xl border border-bordersoft p-5 shadow-sm">
+              <h3 class="text-base font-extrabold text-forest-900 mb-2">🍽️ Medidor Visual no Self-Service (Sem Balança)</h3>
+              <p class="text-xs text-slate-600 mb-3">Use estas referências visuais no restaurante por quilo para bater suas metas na rua:</p>
+              <ul class="space-y-2 text-xs text-slate-700" id="street-guide-portions">
+                <!-- Preenchido dinamicamente conforme o perfil -->
+              </ul>
+            </div>
+            <div class="bg-white rounded-2xl border border-bordersoft p-5 shadow-sm">
+              <h3 class="text-base font-extrabold text-forest-900 mb-2">🎒 Kit Térmico de Sobrevivência no Carro/Mochila</h3>
+              <ul class="space-y-2 text-xs text-slate-700">
+                <li class="p-2.5 rounded-xl bg-surface border border-slate-100"><strong>1. Coqueteleira Seca:</strong> Leve a dose de Whey já medida dentro da coqueteleira; basta adicionar água gelada na academia ou rua.</li>
+                <li class="p-2.5 rounded-xl bg-surface border border-slate-100"><strong>2. Bolsa Térmica Compacta:</strong> Com 1 placa de gelo rígido mantém lanches frios, frutas, ovos cozidos ou sanduíches naturais seguros por até 6 horas.</li>
+                <li class="p-2.5 rounded-xl bg-surface border border-slate-100"><strong>3. Regra do Tempero Limpo:</strong> Em restaurantes, evite molhos brancos, frituras e farofas prontas; tempere a salada com limão, vinagre e no máximo 1 fio de azeite.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </main>
 
   <script>
     /* ==========================================================================
-       1. BANCO DE DADOS INTERNO (JSON: Despensa e Receitas)
+       1. CATÁLOGO COMPLETO DE INGREDIENTES (DADOS NUTRICIONAIS POR GRAMA OU UNIDADE)
        ========================================================================== */
-    const PANTRY_CATALOG = [
-      { key: 'arroz', label: 'Arroz' },
-      { key: 'feijao', label: 'Feijão' },
-      { key: 'macarrao', label: 'Macarrão' },
-      { key: 'frango', label: 'Peito de Frango' },
-      { key: 'patinho', label: 'Patinho Moído' },
-      { key: 'file_suino', label: 'Filé Suíno' },
-      { key: 'musculo', label: 'Músculo Bovino' },
-      { key: 'ovos', label: 'Ovos Inteiros' },
-      { key: 'cuscuz', label: 'Cuscuz de Milho' },
-      { key: 'aveia', label: 'Aveia' },
-      { key: 'pao_integral', label: 'Pão Integral' },
-      { key: 'batata_doce', label: 'Batata-Doce' },
-      { key: 'whey', label: 'Whey Protein' },
-      { key: 'leite', label: 'Leite' },
-      { key: 'banana', label: 'Banana' }
+    const INGREDIENTS = {
+      // PROTEÍNAS
+      ovos: {
+        key: 'ovos', label: 'Ovos Inteiros', category: 'Proteínas & Ovos',
+        unit: 'un', role: 'protein',
+        p: 6.3, c: 0.5, f: 5.0, kcal: 72,
+        min: 1, max: 6, step: 1, rawFactor: 1,
+        titleSingular: 'Ovo Inteiro Mexido', titlePlural: 'Ovos Inteiros Mexidos',
+        boiledSingular: 'Ovo Inteiro Cozido', boiledPlural: 'Ovos Inteiros Cozidos'
+      },
+      frango: {
+        key: 'frango', label: 'Peito de Frango', category: 'Proteínas & Ovos',
+        unit: 'g', role: 'protein',
+        p: 0.31, c: 0, f: 0.035, kcal: 1.59,
+        min: 80, max: 300, step: 10, rawFactor: 1.35,
+        titleName: 'Peito de Frango Grelhado', shreddedName: 'Frango Desfiado Temperado'
+      },
+      musculo: {
+        key: 'musculo', label: 'Músculo Bovino', category: 'Proteínas & Ovos',
+        unit: 'g', role: 'protein',
+        p: 0.30, c: 0, f: 0.055, kcal: 1.73,
+        min: 80, max: 300, step: 10, rawFactor: 1.4,
+        titleName: 'Músculo Bovino Cozido Desfiado'
+      },
+      file_suino: {
+        key: 'file_suino', label: 'Filé Mignon Suíno', category: 'Proteínas & Ovos',
+        unit: 'g', role: 'protein',
+        p: 0.29, c: 0, f: 0.045, kcal: 1.60,
+        min: 80, max: 300, step: 10, rawFactor: 1.3,
+        titleName: 'Filé Mignon Suíno Grelhado'
+      },
+      patinho: {
+        key: 'patinho', label: 'Patinho Moído', category: 'Proteínas & Ovos',
+        unit: 'g', role: 'protein',
+        p: 0.32, c: 0, f: 0.065, kcal: 1.89,
+        min: 80, max: 300, step: 10, rawFactor: 1.3,
+        titleName: 'Patinho Bovino Moído Refogado'
+      },
+      whey: {
+        key: 'whey', label: 'Whey Protein', category: 'Laticínios & Suplementos',
+        unit: 'g', role: 'protein',
+        p: 0.78, c: 0.08, f: 0.05, kcal: 3.90,
+        min: 20, max: 60, step: 5, rawFactor: 1,
+        titleName: 'Whey Protein'
+      },
+      queijo_ricota: {
+        key: 'queijo_ricota', label: 'Queijo Minas / Ricota', category: 'Laticínios & Suplementos',
+        unit: 'g', role: 'protein_ complement',
+        p: 0.17, c: 0.03, f: 0.08, kcal: 1.52,
+        min: 30, max: 120, step: 10, rawFactor: 1,
+        titleName: 'Creme de Ricota / Queijo Minas Light'
+      },
+
+      // CARBOIDRATOS
+      arroz: {
+        key: 'arroz', label: 'Arroz', category: 'Grãos & Carboidratos',
+        unit: 'g', role: 'carb',
+        p: 0.025, c: 0.28, f: 0.003, kcal: 1.28,
+        min: 60, max: 320, step: 10, rawFactor: 0.4,
+        titleName: 'Arroz Cozido'
+      },
+      feijao: {
+        key: 'feijao', label: 'Feijão', category: 'Grãos & Carboidratos',
+        unit: 'g', role: 'carb_side',
+        p: 0.048, c: 0.14, f: 0.005, kcal: 0.76,
+        min: 60, max: 160, step: 10, rawFactor: 0.45,
+        titleName: 'Feijão Cozido'
+      },
+      macarrao: {
+        key: 'macarrao', label: 'Macarrão', category: 'Grãos & Carboidratos',
+        unit: 'g', role: 'carb',
+        p: 0.045, c: 0.29, f: 0.008, kcal: 1.42,
+        min: 70, max: 320, step: 10, rawFactor: 0.45,
+        titleName: 'Macarrão Cozido'
+      },
+      cuscuz: {
+        key: 'cuscuz', label: 'Cuscuz de Milho', category: 'Grãos & Carboidratos',
+        unit: 'g', role: 'carb',
+        p: 0.022, c: 0.25, f: 0.004, kcal: 1.13,
+        min: 50, max: 250, step: 10, rawFactor: 0.5,
+        titleName: 'Cuscuz de Milho Cozido'
+      },
+      aveia: {
+        key: 'aveia', label: 'Aveia em Flocos', category: 'Grãos & Carboidratos',
+        unit: 'g', role: 'carb',
+        p: 0.14, c: 0.66, f: 0.07, kcal: 3.85,
+        min: 20, max: 100, step: 5, rawFactor: 1,
+        titleName: 'Aveia em Flocos'
+      },
+      pao_integral: {
+        key: 'pao_integral', label: 'Pão Integral', category: 'Grãos & Carboidratos',
+        unit: 'g', role: 'carb',
+        p: 0.09, c: 0.44, f: 0.03, kcal: 2.40,
+        min: 25, max: 125, step: 25, rawFactor: 1,
+        titleName: 'Pão Integral'
+      },
+      batata_doce: {
+        key: 'batata_doce', label: 'Batata-Doce / Inglesa', category: 'Hortifruti & Tubérculos',
+        unit: 'g', role: 'carb',
+        p: 0.016, c: 0.20, f: 0.001, kcal: 0.86,
+        min: 80, max: 350, step: 10, rawFactor: 1.15,
+        titleName: 'Batata-Doce Cozida'
+      },
+      banana: {
+        key: 'banana', label: 'Banana / Frutas', category: 'Hortifruti & Tubérculos',
+        unit: 'g', role: 'carb',
+        p: 0.013, c: 0.23, f: 0.003, kcal: 0.98,
+        min: 60, max: 200, step: 15, rawFactor: 1.2,
+        titleName: 'Banana Prata/Nanica'
+      },
+
+      // LÍQUIDOS & GORDURAS BOAS
+      leite: {
+        key: 'leite', label: 'Leite Desnatado', category: 'Laticínios & Suplementos',
+        unit: 'ml', role: 'liquid',
+        p: 0.032, c: 0.048, f: 0.002, kcal: 0.34,
+        min: 100, max: 300, step: 50, rawFactor: 1,
+        titleName: 'Leite Desnatado'
+      },
+      pasta_amendoim: {
+        key: 'pasta_amendoim', label: 'Pasta de Amendoim', category: 'Gorduras Boas & Sementes',
+        unit: 'g', role: 'fat',
+        p: 0.26, c: 0.16, f: 0.50, kcal: 5.95,
+        min: 10, max: 35, step: 5, rawFactor: 1,
+        titleName: 'Pasta de Amendoim Integral'
+      },
+      chia: {
+        key: 'chia', label: 'Semente de Chia', category: 'Gorduras Boas & Sementes',
+        unit: 'g', role: 'fat',
+        p: 0.17, c: 0.42, f: 0.31, kcal: 4.86,
+        min: 5, max: 20, step: 5, rawFactor: 1,
+        titleName: 'Semente de Chia'
+      }
+    };
+
+    const PANTRY_ORDER = [
+      'ovos', 'frango', 'musculo', 'file_suino', 'patinho', 'whey', 'queijo_ricota',
+      'arroz', 'feijao', 'macarrao', 'cuscuz', 'aveia', 'pao_integral', 'batata_doce', 'banana',
+      'leite', 'pasta_amendoim', 'chia'
     ];
 
-    // BANCO DE RECEITAS INTELIGENTE (Títulos genéricos, quantidades base genéricas)
-    const RECIPES = [
-      // CAFÉ DA MANHÃ
+    /* ==========================================================================
+       2. BANCO DE MODELOS DE REFEIÇÕES COM GERADORES DE TÍTULOS DINÂMICOS
+       (Nenhum título possui números fixos! Todos usam a função dynamicTitle(qtyMap))
+       ========================================================================== */
+    const MEAL_TEMPLATES = [
+      // --- CAFÉ DA MANHÃ (breakfast) ---
       {
         id: 'bf_ovos_cuscuz',
-        name: 'Ovos Inteiros Mexidos com Cuscuz',
-        slots: ['breakfast'],
+        slots: ['breakfast', 'post_morning'],
+        routines: ['misto', 'rua_total', 'casa'],
         required: ['ovos', 'cuscuz'],
-        items: [
-          { key: 'ovos', name: 'Ovos inteiros mexidos (sem azeite)', unit: 'un', role: 'protein', p: 6.3, c: 0.6, f: 5.0, kcal: 73, min: 2, max: 6, base: 3 },
-          { key: 'cuscuz', name: 'Cuscuz de milho cozido', unit: 'g', role: 'carb', p: 0.02, c: 0.25, f: 0.004, kcal: 1.12, min: 50, max: 200, base: 100 }
-        ]
+        tag: 'Em Casa • 5 min • Sem Óleo',
+        prepNote: 'Hidrate o flocão por 3 min e cozinhe na cuscuzeira por 5 min. Faça os ovos mexidos em frigideira antiaderente sem óleo + café sem açúcar.',
+        components: [
+          { key: 'ovos', role: 'primary_protein', customName: 'Ovos inteiros mexidos (sem azeite)' },
+          { key: 'cuscuz', role: 'primary_carb', customName: 'Cuscuz de milho cozido no vapor' }
+        ],
+        dynamicTitle: (q) => `Cuscuz de 5 min (${q.cuscuz}g) com ${q.ovos} ${q.ovos === 1 ? 'Ovo Inteiro Mexido' : 'Ovos Inteiros Mexidos'}`
       },
       {
         id: 'bf_ovos_pao',
-        name: 'Ovos Inteiros Mexidos com Pão Integral',
-        slots: ['breakfast'],
+        slots: ['breakfast', 'post_morning', 'snack'],
+        routines: ['misto', 'rua_total', 'casa'],
         required: ['ovos', 'pao_integral'],
-        items: [
-          { key: 'ovos', name: 'Ovos inteiros mexidos (sem azeite)', unit: 'un', role: 'protein', p: 6.3, c: 0.6, f: 5.0, kcal: 73, min: 2, max: 6, base: 3 },
-          { key: 'pao_integral', name: 'Pão integral em fatias', unit: 'g', role: 'carb', p: 0.09, c: 0.44, f: 0.03, kcal: 2.4, min: 25, max: 100, base: 50 }
-        ]
+        tag: 'Prático • 5 min',
+        prepNote: 'Prepare os ovos mexidos cremosos em frigideira antiaderente sem óleo e monte no pão integral. Acompanhe com café preto sem açúcar.',
+        components: [
+          { key: 'ovos', role: 'primary_protein', customName: 'Ovos inteiros mexidos (sem azeite)' },
+          { key: 'pao_integral', role: 'primary_carb', customName: 'Pão integral' }
+        ],
+        dynamicTitle: (q) => `Sanduíche Proteico de ${q.ovos} ${q.ovos === 1 ? 'Ovo Mexido' : 'Ovos Inteiros Mexidos'} no Pão Integral (${q.pao_integral}g)`
       },
       {
-        id: 'bf_panqueca',
-        name: 'Panqueca de Aveia e Ovos',
-        slots: ['breakfast'],
+        id: 'bf_panqueca_aveia',
+        slots: ['breakfast', 'post_morning', 'snack'],
+        routines: ['misto', 'rua_total', 'casa'],
         required: ['ovos', 'aveia'],
-        items: [
-          { key: 'ovos', name: 'Ovos inteiros na massa', unit: 'un', role: 'protein', p: 6.3, c: 0.6, f: 5.0, kcal: 73, min: 2, max: 6, base: 3 },
-          { key: 'aveia', name: 'Aveia em flocos', unit: 'g', role: 'carb', p: 0.14, c: 0.66, f: 0.07, kcal: 3.8, min: 30, max: 80, base: 45 }
-        ]
+        optional: ['chia', 'banana'],
+        tag: 'Saciedade Alta • Sem Óleo',
+        prepNote: 'Bata os ovos inteiros com a aveia (e canela ou pitada de sal) com um garfo e doure 2 min de cada lado na frigideira antiaderente.',
+        components: [
+          { key: 'ovos', role: 'primary_protein', customName: 'Ovos inteiros na massa' },
+          { key: 'aveia', role: 'primary_carb', customName: 'Aveia em flocos' },
+          { key: 'chia', role: 'fixed_fat', fixedQty: 5, optional: true, customName: 'Semente de chia na massa' }
+        ],
+        dynamicTitle: (q) => `Panqueca de Aveia (${q.aveia}g) com ${q.ovos} ${q.ovos === 1 ? 'Ovo Inteiro' : 'Ovos Inteiros'}`
       },
-      
-      // LANCHES
       {
-        id: 'sn_shake',
-        name: 'Shake de Whey e Aveia',
-        slots: ['snack', 'pre', 'post'],
+        id: 'bf_crepioca_frango_ricota',
+        slots: ['breakfast', 'snack'],
+        routines: ['misto', 'casa'],
+        required: ['ovos', 'queijo_ricota', 'pao_integral'],
+        tag: 'Matinal Cremoso',
+        prepNote: 'Misture os ovos na antiaderente com o queijo/ricota light até ficar cremoso e sirva com o pão integral tostado.',
+        components: [
+          { key: 'ovos', role: 'primary_protein', customName: 'Ovos inteiros mexidos' },
+          { key: 'queijo_ricota', role: 'fixed_protein', fixedQty: 35, customName: 'Queijo minas / creme de ricota light' },
+          { key: 'pao_integral', role: 'primary_carb', customName: 'Pão integral tostado' }
+        ],
+        dynamicTitle: (q) => `${q.ovos} Ovos Cremosos com Ricota (${q.queijo_ricota}g) e Pão Integral (${q.pao_integral}g)`
+      },
+      {
+        id: 'bf_mingau_whey',
+        slots: ['breakfast', 'snack', 'post'],
+        routines: ['misto', 'rua_total', 'casa'],
         required: ['whey', 'aveia', 'leite'],
-        items: [
-          { key: 'whey', name: 'Whey Protein', unit: 'g', role: 'protein', p: 0.8, c: 0.08, f: 0.05, kcal: 3.9, min: 20, max: 50, base: 30 },
-          { key: 'aveia', name: 'Aveia em flocos', unit: 'g', role: 'carb', p: 0.14, c: 0.66, f: 0.07, kcal: 3.8, min: 20, max: 60, base: 40 },
-          { key: 'leite', name: 'Leite desnatado', unit: 'ml', role: 'fixed', p: 0.03, c: 0.05, f: 0, kcal: 0.34, min: 150, max: 250, base: 200 }
-        ]
-      },
-      {
-        id: 'sn_frango_pao',
-        name: 'Sanduíche Natural de Frango',
-        slots: ['snack', 'pre'],
-        required: ['frango', 'pao_integral'],
-        items: [
-          { key: 'frango', name: 'Frango desfiado temperado', unit: 'g', role: 'protein', p: 0.31, c: 0, f: 0.03, kcal: 1.5, min: 80, max: 180, base: 120 },
-          { key: 'pao_integral', name: 'Pão integral', unit: 'g', role: 'carb', p: 0.09, c: 0.44, f: 0.03, kcal: 2.4, min: 25, max: 100, base: 50 }
-        ]
+        optional: ['chia'],
+        tag: 'Sem Ovos • 3 min',
+        prepNote: 'Misture a aveia com o leite e aqueça por 1 min30s (ou deixe na geladeira como Overnight Oats) e incorpore o Whey Protein.',
+        components: [
+          { key: 'whey', role: 'primary_protein', customName: 'Whey Protein' },
+          { key: 'aveia', role: 'primary_carb', customName: 'Aveia em flocos' },
+          { key: 'leite', role: 'fixed_liquid', fixedQty: 180, customName: 'Leite desnatado' },
+          { key: 'chia', role: 'fixed_fat', fixedQty: 5, optional: true, customName: 'Semente de chia' }
+        ],
+        dynamicTitle: (q) => `Overnight Oats / Mingau Proteico de Aveia (${q.aveia}g) e Whey (${q.whey}g)`
       },
 
-      // ALMOÇOS E JANTARES
+      // --- LANCHES INTERMEDIÁRIOS DE RUA / MOCHILA (snack) ---
       {
-        id: 'ln_frango_arroz_feijao',
-        name: 'Peito de Frango com Arroz e Feijão',
+        id: 'sn_overnight_oats',
+        slots: ['snack', 'breakfast'],
+        routines: ['misto', 'rua_total', 'casa'],
+        required: ['whey', 'aveia', 'leite'],
+        optional: ['chia', 'banana'],
+        tag: 'Pote Portátil • Rua/Carro',
+        prepNote: 'Monte no pote hermético na noite anterior e leve na bolsa térmica para consumir frio em qualquer lugar.',
+        components: [
+          { key: 'whey', role: 'primary_protein', customName: 'Whey Protein' },
+          { key: 'aveia', role: 'primary_carb', customName: 'Aveia em flocos' },
+          { key: 'leite', role: 'fixed_liquid', fixedQty: 150, customName: 'Leite desnatado gelado' },
+          { key: 'chia', role: 'fixed_fat', fixedQty: 5, optional: true, customName: 'Semente de chia' }
+        ],
+        dynamicTitle: (q) => `Overnight Oats Portátil (${q.aveia}g Aveia + ${q.whey}g Whey)`
+      },
+      {
+        id: 'sn_sanduiche_frango',
+        slots: ['snack', 'lunch_cold'],
+        routines: ['misto', 'rua_total', 'casa'],
+        required: ['frango', 'pao_integral'],
+        optional: ['queijo_ricota'],
+        tag: 'Lanche Frio de Bolso/Rua',
+        prepNote: 'Tempere o frango desfiado com ervas (e ricota, se ativo), monte no pão integral com alface/tomate e embale em papel-alumínio.',
+        components: [
+          { key: 'frango', role: 'primary_protein', customName: 'Peito de frango desfiado temperado' },
+          { key: 'pao_integral', role: 'primary_carb', customName: 'Pão integral em fatias' },
+          { key: 'queijo_ricota', role: 'fixed_protein', fixedQty: 30, optional: true, customName: 'Creme de ricota light' }
+        ],
+        dynamicTitle: (q) => `Sanduíche Natural Portátil de Frango Desfiado (${q.frango}g) no Pão Integral (${q.pao_integral}g)`
+      },
+      {
+        id: 'sn_ovos_cozidos_banana',
+        slots: ['snack', 'pre'],
+        routines: ['misto', 'rua_total', 'casa'],
+        required: ['ovos', 'banana'],
+        optional: ['aveia'],
+        tag: '100% Portátil • Zero Preparo na Hora',
+        prepNote: 'Leve os ovos já cozidos em pote fechado com papel-toalha na mochila junto com a fruta.',
+        components: [
+          { key: 'ovos', role: 'primary_protein', customName: 'Ovos inteiros cozidos' },
+          { key: 'banana', role: 'primary_carb', customName: 'Banana prata ou nanica' }
+        ],
+        dynamicTitle: (q) => `Kit Rápido de Rua: ${q.ovos} ${q.ovos === 1 ? 'Ovo Cozido' : 'Ovos Inteiros Cozidos'} + Banana (${q.banana}g)`
+      },
+      {
+        id: 'sn_cuscuz_frango_pote',
+        slots: ['snack', 'dinner'],
+        routines: ['misto', 'rua_total', 'casa'],
+        required: ['frango', 'cuscuz'],
+        tag: 'Pote Rápido • Alta Saciedade',
+        prepNote: 'Misture o frango desfiado diretamente no cuscuz de milho cozido com cebolinha e ervas.',
+        components: [
+          { key: 'frango', role: 'primary_protein', customName: 'Peito de frango desfiado' },
+          { key: 'cuscuz', role: 'primary_carb', customName: 'Cuscuz de milho cozido' }
+        ],
+        dynamicTitle: (q) => `Pote Proteico de Frango Desfiado (${q.frango}g) com Cuscuz (${q.cuscuz}g)`
+      },
+
+      // --- PRÉ-TREINO E PÓS-TREINO (pre, post) ---
+      {
+        id: 'pre_banana_amendoim',
+        slots: ['pre'],
+        routines: ['misto', 'rua_total', 'casa'],
+        required: ['banana', 'pasta_amendoim'],
+        optional: ['whey'],
+        tag: 'Energia Rápida • 30 min antes',
+        prepNote: 'Consuma de 30 a 45 minutos antes do treino para fornecer glicogênio sem pesar no estômago.',
+        components: [
+          { key: 'banana', role: 'primary_carb', customName: 'Banana em rodelas' },
+          { key: 'pasta_amendoim', role: 'fixed_fat', fixedQty: 15, customName: 'Pasta de amendoim integral sem açúcar' }
+        ],
+        dynamicTitle: (q) => `Pré-Treino Rápido: Banana (${q.banana}g) + Pasta de Amendoim (${q.pasta_amendoim}g)`
+      },
+      {
+        id: 'pre_banana_aveia_whey',
+        slots: ['pre', 'post'],
+        routines: ['misto', 'rua_total', 'casa'],
+        required: ['whey', 'banana'],
+        optional: ['aveia', 'leite'],
+        tag: 'Shake Rápido • Coqueteleira',
+        prepNote: 'Agite o Whey na coqueteleira com água ou leite gelado e consuma acompanhado da banana.',
+        components: [
+          { key: 'whey', role: 'primary_protein', customName: 'Whey Protein' },
+          { key: 'banana', role: 'primary_carb', customName: 'Banana média/grande' },
+          { key: 'leite', role: 'fixed_liquid', fixedQty: 200, optional: true, customName: 'Leite desnatado gelado' }
+        ],
+        dynamicTitle: (q) => `Shake de Whey Protein (${q.whey}g) + Banana (${q.banana}g)`
+      },
+      {
+        id: 'pre_pao_ovos',
+        slots: ['pre', 'post'],
+        routines: ['misto', 'rua_total', 'casa'],
+        required: ['ovos', 'pao_integral'],
+        tag: 'Sólido Prático',
+        prepNote: 'Opção sólida excelente para quem prefere comida de verdade antes ou após o treino.',
+        components: [
+          { key: 'ovos', role: 'primary_protein', customName: 'Ovos inteiros mexidos ou cozidos' },
+          { key: 'pao_integral', role: 'primary_carb', customName: 'Pão integral' }
+        ],
+        dynamicTitle: (q) => `${q.ovos} Ovos Inteiros + Pão Integral (${q.pao_integral}g)`
+      },
+
+      // --- ALMOÇOS E JANTARES PRINCIPAIS (lunch, dinner) ---
+      {
+        id: 'main_frango_arroz_feijao',
         slots: ['lunch', 'dinner'],
+        routines: ['misto', 'casa'],
         required: ['frango', 'arroz', 'feijao'],
-        items: [
-          { key: 'frango', name: 'Peito de frango grelhado', unit: 'g', role: 'protein', p: 0.31, c: 0, f: 0.03, kcal: 1.5, min: 100, max: 250, base: 150 },
-          { key: 'arroz', name: 'Arroz cozido', unit: 'g', role: 'carb', p: 0.025, c: 0.28, f: 0.003, kcal: 1.28, min: 80, max: 250, base: 150 },
-          { key: 'feijao', name: 'Feijão cozido', unit: 'g', role: 'fixed', p: 0.048, c: 0.14, f: 0.005, kcal: 0.76, min: 80, max: 120, base: 100 }
-        ]
+        tag: 'Buffet Self-Service / Marmita',
+        prepNote: 'Monte metade do prato com salada crua e legumes no vapor (tempere com limão). Adicione o frango grelhado, arroz e feijão.',
+        components: [
+          { key: 'frango', role: 'primary_protein', customName: 'Peito de frango grelhado em filés' },
+          { key: 'arroz', role: 'primary_carb', customName: 'Arroz cozido' },
+          { key: 'feijao', role: 'fixed_carb', fixedQty: 100, customName: 'Feijão cozido (1 concha)' }
+        ],
+        dynamicTitle: (q) => `Peito de Frango Grelhado (${q.frango}g) com Arroz (${q.arroz}g) e Feijão (${q.feijao}g)`
       },
       {
-        id: 'ln_patinho_batata',
-        name: 'Patinho Moído com Batata-Doce',
+        id: 'main_suino_arroz_feijao',
         slots: ['lunch', 'dinner'],
+        routines: ['misto', 'casa'],
+        required: ['file_suino', 'arroz', 'feijao'],
+        tag: 'Corte Magro • Buffet / Casa',
+        prepNote: 'O filé mignon suíno (ou lombo magro) tem pouquíssima gordura e excelente perfil de aminoácidos. Grelhe em medalhões.',
+        components: [
+          { key: 'file_suino', role: 'primary_protein', customName: 'Filé mignon suíno grelhado em medalhões' },
+          { key: 'arroz', role: 'primary_carb', customName: 'Arroz cozido' },
+          { key: 'feijao', role: 'fixed_carb', fixedQty: 100, customName: 'Feijão cozido (1 concha)' }
+        ],
+        dynamicTitle: (q) => `Filé Mignon Suíno Grelhado (${q.file_suino}g) com Arroz (${q.arroz}g) e Feijão (${q.feijao}g)`
+      },
+      {
+        id: 'main_musculo_arroz',
+        slots: ['lunch', 'dinner'],
+        routines: ['misto', 'rua_total', 'casa'],
+        required: ['musculo', 'arroz'],
+        optional: ['feijao'],
+        tag: 'Panela de Pressão • Suculento',
+        prepNote: 'Músculo cozido na pressão com alho, cebola e louro até desfiar no garfo, servido com arroz e legumes.',
+        components: [
+          { key: 'musculo', role: 'primary_protein', customName: 'Músculo bovino cozido e desfiado' },
+          { key: 'arroz', role: 'primary_carb', customName: 'Arroz cozido' }
+        ],
+        dynamicTitle: (q) => `Músculo Bovino Desfiado (${q.musculo}g) com Arroz (${q.arroz}g) e Legumes`
+      },
+      {
+        id: 'main_macarrao_frango_frio',
+        slots: ['lunch', 'dinner', 'lunch_cold'],
+        routines: ['rua_total', 'misto', 'casa'],
+        required: ['frango', 'macarrao'],
+        tag: 'Marmita Fria de Rua / Prato Rápido',
+        prepNote: 'Excelente para dias intensos na rua: pode ser consumido frio como salada de macarrão com frango desfiado, cenoura ralada e tomate.',
+        components: [
+          { key: 'frango', role: 'primary_protein', customName: 'Peito de frango em cubos ou desfiado' },
+          { key: 'macarrao', role: 'primary_carb', customName: 'Macarrão parafuso/penne cozido al dente' }
+        ],
+        dynamicTitle: (q) => `Macarrão (${q.macarrao}g) com Peito de Frango (${q.frango}g) e Vegetais`
+      },
+      {
+        id: 'main_patinho_batata',
+        slots: ['lunch', 'dinner'],
+        routines: ['misto', 'rua_total', 'casa'],
         required: ['patinho', 'batata_doce'],
-        items: [
-          { key: 'patinho', name: 'Patinho moído refogado', unit: 'g', role: 'protein', p: 0.32, c: 0, f: 0.07, kcal: 1.9, min: 100, max: 250, base: 150 },
-          { key: 'batata_doce', name: 'Batata-doce cozida', unit: 'g', role: 'carb', p: 0.016, c: 0.20, f: 0.001, kcal: 0.86, min: 100, max: 300, base: 150 }
-        ]
+        tag: 'Clássico Recomposição',
+        prepNote: 'Patinho moído refogado bem soltinho com alho e cebola acompanhado de batata-doce cozida e brócolis.',
+        components: [
+          { key: 'patinho', role: 'primary_protein', customName: 'Patinho bovino moído refogado' },
+          { key: 'batata_doce', role: 'primary_carb', customName: 'Batata-doce cozida' }
+        ],
+        dynamicTitle: (q) => `Patinho Moído Refogado (${q.patinho}g) com Batata-Doce (${q.batata_doce}g)`
       },
       {
-        id: 'ln_suino_macarrao',
-        name: 'Filé Suíno Grelhado com Macarrão',
+        id: 'main_suino_cuscuz',
+        slots: ['dinner', 'lunch'],
+        routines: ['misto', 'rua_total', 'casa'],
+        required: ['file_suino', 'cuscuz'],
+        tag: 'Jantar Prático • 10 min',
+        prepNote: 'Grelhe os medalhões de filé mignon suíno na frigideira antiaderente por 4 min de cada lado e sirva com cuscuz hidratado e salada.',
+        components: [
+          { key: 'file_suino', role: 'primary_protein', customName: 'Filé mignon suíno grelhado' },
+          { key: 'cuscuz', role: 'primary_carb', customName: 'Cuscuz de milho cozido' }
+        ],
+        dynamicTitle: (q) => `Filé Mignon Suíno Grelhado (${q.file_suino}g) com Cuscuz (${q.cuscuz}g)`
+      },
+      {
+        id: 'main_musculo_cuscuz_ovo',
+        slots: ['dinner', 'lunch'],
+        routines: ['misto', 'rua_total', 'casa'],
+        required: ['musculo', 'cuscuz', 'ovos'],
+        tag: 'Jantar Forte • Alta Proteína',
+        prepNote: 'Aqueça o músculo desfiado pronto do Meal Prep com o cuscuz e finalize com 1 ovo cozido.',
+        components: [
+          { key: 'musculo', role: 'primary_protein', customName: 'Músculo bovino cozido desfiado' },
+          { key: 'ovos', role: 'fixed_protein', fixedQty: 1, customName: 'Ovo inteiro cozido' },
+          { key: 'cuscuz', role: 'primary_carb', customName: 'Cuscuz de milho cozido' }
+        ],
+        dynamicTitle: (q) => `Músculo Desfiado (${q.musculo}g) + ${q.ovos} Ovo Cozido com Cuscuz (${q.cuscuz}g)`
+      },
+      {
+        id: 'main_suino_macarrao',
         slots: ['lunch', 'dinner'],
+        routines: ['misto', 'casa'],
         required: ['file_suino', 'macarrao'],
-        items: [
-          { key: 'file_suino', name: 'Filé mignon suíno grelhado', unit: 'g', role: 'protein', p: 0.28, c: 0, f: 0.04, kcal: 1.5, min: 100, max: 250, base: 150 },
-          { key: 'macarrao', name: 'Macarrão cozido ao sugo', unit: 'g', role: 'carb', p: 0.045, c: 0.28, f: 0.008, kcal: 1.38, min: 80, max: 250, base: 150 }
-        ]
+        tag: 'Jantar Saciante',
+        prepNote: 'Macarrão ao alho e ervas ou molho de tomate natural acompanhado de filé mignon suíno grelhado.',
+        components: [
+          { key: 'file_suino', role: 'primary_protein', customName: 'Filé mignon suíno grelhado' },
+          { key: 'macarrao', role: 'primary_carb', customName: 'Macarrão cozido ao sugo/ervas' }
+        ],
+        dynamicTitle: (q) => `Filé Mignon Suíno (${q.file_suino}g) com Macarrão ao Sugo (${q.macarrao}g)`
       },
       {
-        id: 'ln_musculo_arroz',
-        name: 'Músculo Desfiado com Arroz e Feijão',
+        id: 'main_patinho_arroz_feijao',
         slots: ['lunch', 'dinner'],
-        required: ['musculo', 'arroz', 'feijao'],
-        items: [
-          { key: 'musculo', name: 'Músculo bovino desfiado', unit: 'g', role: 'protein', p: 0.30, c: 0, f: 0.05, kcal: 1.7, min: 100, max: 250, base: 150 },
-          { key: 'arroz', name: 'Arroz cozido', unit: 'g', role: 'carb', p: 0.025, c: 0.28, f: 0.003, kcal: 1.28, min: 80, max: 250, base: 150 },
-          { key: 'feijao', name: 'Feijão cozido', unit: 'g', role: 'fixed', p: 0.048, c: 0.14, f: 0.005, kcal: 0.76, min: 80, max: 120, base: 100 }
-        ]
-      },
-      {
-        id: 'ln_omelete_arroz',
-        name: 'Omelete Rápida com Arroz',
-        slots: ['lunch', 'dinner'],
-        required: ['ovos', 'arroz'],
-        items: [
-          { key: 'ovos', name: 'Ovos inteiros batidos', unit: 'un', role: 'protein', p: 6.3, c: 0.6, f: 5.0, kcal: 73, min: 2, max: 6, base: 3 },
-          { key: 'arroz', name: 'Arroz cozido', unit: 'g', role: 'carb', p: 0.025, c: 0.28, f: 0.003, kcal: 1.28, min: 80, max: 250, base: 150 }
-        ]
+        routines: ['misto', 'rua_total', 'casa'],
+        required: ['patinho', 'arroz', 'feijao'],
+        tag: 'Marmita / Buffet Diário',
+        prepNote: 'Carne moída magra de fácil digestão com arroz, feijão e salada verde.',
+        components: [
+          { key: 'patinho', role: 'primary_protein', customName: 'Patinho moído refogado' },
+          { key: 'arroz', role: 'primary_carb', customName: 'Arroz cozido' },
+          { key: 'feijao', role: 'fixed_carb', fixedQty: 100, customName: 'Feijão cozido' }
+        ],
+        dynamicTitle: (q) => `Patinho Moído (${q.patinho}g) com Arroz (${q.arroz}g) e Feijão (${q.feijao}g)`
       }
     ];
 
-    const DAYS = [
-      { id: 'seg', name: 'Segunda', workout: true },
-      { id: 'ter', name: 'Terça', workout: true },
-      { id: 'qua', name: 'Quarta', workout: true },
-      { id: 'qui', name: 'Quinta', workout: true },
-      { id: 'sex', name: 'Sexta', workout: true },
-      { id: 'sab', name: 'Sábado', workout: false },
-      { id: 'dom', name: 'Domingo', workout: false }
+    const DAYS_CONFIG = [
+      { id: 'seg', short: 'Seg', full: 'Segunda-Feira', index: 0 },
+      { id: 'ter', short: 'Ter', full: 'Terça-Feira', index: 1 },
+      { id: 'qua', short: 'Qua', full: 'Quarta-Feira', index: 2 },
+      { id: 'qui', short: 'Qui', full: 'Quinta-Feira', index: 3 },
+      { id: 'sex', short: 'Sex', full: 'Sexta-Feira', index: 4 },
+      { id: 'sab', short: 'Sáb', full: 'Sábado', index: 5 },
+      { id: 'dom', short: 'Dom', full: 'Domingo', index: 6 }
     ];
 
     /* ==========================================================================
-       2. LÓGICA DE ESTADO
+       3. ESTADO GLOBAL DA APLICAÇÃO
        ========================================================================== */
     let appState = {
+      sex: 'M',
+      age: 42,
+      height: 182,
       weight: 106,
+      goal: 'recomp',        // 'cut', 'recomp', 'bulk'
+      freq: 5,               // 0, 3, 5, 6
+      workoutTime: 'tarde',  // 'manha', 'almoco', 'tarde', 'noite'
       proteinRatio: 2.1,
-      goal: 'recomp', // cut, recomp, bulk
-      pantry: {}, // Preenchido dinamicamente no init
-      plan: {},
-      selectedDay: 'seg'
+      routine: 'misto',      // 'misto', 'rua_total', 'casa'
+      lowOil: true,
+      pantry: {},
+      customOverrides: {},   // { "seg_0": templateId }
+      variationSeed: 0,
+      selectedDay: 'seg',
+      viewAllDays: false,
+      activeTab: 'cardapio',
+      waterBottles: 0,
+      checkedShopping: {},
+      weeklyPlan: {}
     };
 
-    function init() {
-      // Inicia a despensa toda marcada
-      PANTRY_CATALOG.forEach(i => { appState.pantry[i.key] = true; });
-      generatePlan();
-      renderUI();
+    function setDefaultPantry() {
+      PANTRY_ORDER.forEach(k => { appState.pantry[k] = true; });
     }
 
     /* ==========================================================================
-       3. MOTOR MATEMÁTICO (Cálculo Inverso)
+       4. MOTOR NUTRICIONAL INDIVIDUALIZADO (TMB, GET, CICLAGEM E HORÁRIOS)
        ========================================================================== */
-    function calcDailyTargets() {
-      const w = appState.weight;
-      const bmr = (10 * w) + (6.25 * 182) - (5 * 42) + 5; // Form. Homem Mifflin
-      const tdee = Math.round(bmr * 1.55); // Fator atividade
+    function isDayWorkout(dayIndex) {
+      const f = parseInt(appState.freq, 10);
+      if (f === 0) return false;                    // Sedentário: nenhum dia tem treino
+      if (f === 3) return [0, 2, 4].includes(dayIndex); // Seg, Qua, Sex
+      if (f === 5) return dayIndex <= 4;            // Seg a Sex
+      if (f === 6) return dayIndex <= 5;            // Seg a Sáb
+      return dayIndex <= 4;
+    }
 
-      let factor = appState.goal === 'cut' ? 0.70 : (appState.goal === 'bulk' ? 1.1 : 0.80);
-      let trainKcal = Math.round(tdee * factor);
-      let restKcal = Math.round(trainKcal * 0.88);
+    function calculateNutritionTargets() {
+      const w = parseFloat(appState.weight) || 75;
+      const h = parseFloat(appState.height) || 170;
+      const a = parseFloat(appState.age) || 35;
+      const sex = appState.sex;
 
-      let p = Math.round(w * appState.proteinRatio);
-      let f = Math.round(w * 0.6);
-      let trainC = Math.round((trainKcal - (p*4) - (f*9)) / 4);
-      let restC = Math.round((restKcal - (p*4) - (f*9)) / 4);
+      // Mifflin-St Jeor exato por sexo
+      const bmr = Math.round((10 * w) + (6.25 * h) - (5 * a) + (sex === 'M' ? 5 : -161));
+
+      // Multiplicador de atividade física real
+      const freq = parseInt(appState.freq, 10);
+      const actMult = freq === 0 ? 1.22 : (freq === 3 ? 1.40 : (freq === 5 ? 1.55 : 1.65));
+      const tdee = Math.round(bmr * actMult);
+
+      // Ajuste pelo objetivo
+      let trainFactor = 0.80; // recomp
+      if (appState.goal === 'cut') trainFactor = 0.73;
+      if (appState.goal === 'bulk') trainFactor = 1.08;
+
+      const trainKcal = Math.round(tdee * trainFactor);
+      const restKcal = freq === 0 ? trainKcal : Math.round(trainKcal * 0.88);
+
+      const pGrams = Math.round(w * appState.proteinRatio);
+      const fatFactor = appState.lowOil ? 0.54 : 0.68;
+      const fGrams = Math.max(35, Math.round(w * fatFactor));
+
+      const trainC = Math.max(60, Math.round((trainKcal - (pGrams * 4) - (fGrams * 9)) / 4));
+      const restC = Math.max(50, Math.round((restKcal - (pGrams * 4) - (fGrams * 9)) / 4));
 
       return {
-        bmr, tdee,
-        train: { kcal: trainKcal, p, c: trainC, f },
-        rest:  { kcal: restKcal, p, c: restC, f }
+        bmr,
+        tdee,
+        train: { kcal: (pGrams * 4) + (trainC * 4) + (fGrams * 9), p: pGrams, c: trainC, f: fGrams, delta: trainKcal - tdee },
+        rest:  { kcal: (pGrams * 4) + (restC * 4) + (fGrams * 9),  p: pGrams, c: restC,  f: fGrams, delta: restKcal - tdee }
       };
     }
 
-    function scaleRecipe(recipe, targetP, targetC) {
-      // Clona itens profundos
-      let items = JSON.parse(JSON.stringify(recipe.items));
-      let outP = 0, outC = 0, outF = 0, outKcal = 0;
-
-      // Escalar proteínas
-      let proteinItem = items.find(i => i.role === 'protein');
-      if (proteinItem) {
-        let neededQty = targetP / proteinItem.p;
-        if (proteinItem.unit === 'un') neededQty = Math.round(neededQty);
-        else neededQty = Math.round(neededQty / 10) * 10;
-        
-        neededQty = Math.max(proteinItem.min, Math.min(proteinItem.max, neededQty));
-        proteinItem.qty = neededQty;
+    // Gera a estrutura de horários do dia adaptada ao treino e rotina do indivíduo
+    function getDailySlotSchedule(workoutDay) {
+      if (!workoutDay) {
+        // Dia sem treino ou indivíduo sedentário (NÃO exibe Pré-Treino nem Pós-Treino!)
+        return [
+          { slotKey: 'breakfast', time: '07h30', title: 'Café da Manhã', pShare: 0.22, cShare: 0.23, allowedTypes: ['breakfast'] },
+          { slotKey: 'snack_am',  time: '10h30', title: 'Lanche da Manhã', pShare: 0.16, cShare: 0.17, allowedTypes: ['snack'] },
+          { slotKey: 'lunch',     time: '13h00', title: 'Almoço Equilibrado', pShare: 0.28, cShare: 0.28, allowedTypes: ['lunch'] },
+          { slotKey: 'snack_pm',  time: '16h30', title: 'Lanche da Tarde Saciante', pShare: 0.14, cShare: 0.14, allowedTypes: ['snack', 'pre'] },
+          { slotKey: 'dinner',    time: '20h00', title: 'Jantar Leve', pShare: 0.20, cShare: 0.18, allowedTypes: ['dinner'] }
+        ];
       }
 
-      // Descobrir quanto carboidrato a proteina já trouxe
-      let currentC = items.reduce((acc, it) => acc + ((it.qty || it.base) * it.c), 0);
-
-      // Escalar carboidratos principais para cobrir a diferença
-      let carbItem = items.find(i => i.role === 'carb');
-      if (carbItem) {
-        let missingC = targetC - currentC;
-        let neededQty = missingC > 0 ? (missingC / carbItem.c) : carbItem.min;
-        if (carbItem.unit === 'un') neededQty = Math.round(neededQty);
-        else neededQty = Math.round(neededQty / 10) * 10;
-        
-        neededQty = Math.max(carbItem.min, Math.min(carbItem.max, neededQty));
-        carbItem.qty = neededQty;
+      const wt = appState.workoutTime;
+      if (wt === 'manha') {
+        return [
+          { slotKey: 'pre',       time: '06h00', title: 'Pré-Treino Matinal', pShare: 0.08, cShare: 0.15, allowedTypes: ['pre'] },
+          { slotKey: 'breakfast', time: '07h45', title: 'Pós-Treino / Café da Manhã', pShare: 0.22, cShare: 0.22, allowedTypes: ['breakfast', 'post_morning'] },
+          { slotKey: 'snack_am',  time: '10h30', title: 'Lanche da Manhã (Rua)', pShare: 0.15, cShare: 0.14, allowedTypes: ['snack'] },
+          { slotKey: 'lunch',     time: '13h00', title: 'Almoço Principal', pShare: 0.26, cShare: 0.25, allowedTypes: ['lunch'] },
+          { slotKey: 'snack_pm',  time: '16h30', title: 'Lanche da Tarde', pShare: 0.11, cShare: 0.10, allowedTypes: ['snack'] },
+          { slotKey: 'dinner',    time: '20h15', title: 'Jantar Reparador', pShare: 0.18, cShare: 0.14, allowedTypes: ['dinner'] }
+        ];
       }
-
-      // Calcular totais finais
-      items.forEach(it => {
-        if(!it.qty) it.qty = it.base; // para roles fixed
-        outP += it.qty * it.p;
-        outC += it.qty * it.c;
-        outF += it.qty * it.f;
-        outKcal += it.qty * it.kcal;
-      });
-
-      return {
-        name: recipe.name,
-        items: items,
-        macros: { p: Math.round(outP), c: Math.round(outC), f: Math.round(outF), kcal: Math.round(outKcal) }
-      };
-    }
-
-    function generatePlan() {
-      const targets = calcDailyTargets();
-      
-      // Estrutura Fixa de Refeições no dia (5 refeições)
-      const slots = [
-        { id: 'breakfast', label: '07h00 • Café da Manhã', pShare: 0.20, cShare: 0.20 },
-        { id: 'snack', label: '10h00 • Lanche da Manhã', pShare: 0.15, cShare: 0.15 },
-        { id: 'lunch', label: '13h00 • Almoço Principal', pShare: 0.30, cShare: 0.30 },
-        { id: 'pre', label: '16h00 • Pré-Treino', pShare: 0.10, cShare: 0.15 },
-        { id: 'dinner', label: '20h00 • Jantar', pShare: 0.25, cShare: 0.20 },
+      if (wt === 'almoco') {
+        return [
+          { slotKey: 'breakfast', time: '07h00', title: 'Café da Manhã', pShare: 0.18, cShare: 0.18, allowedTypes: ['breakfast'] },
+          { slotKey: 'snack_am',  time: '09h45', title: 'Lanche da Manhã', pShare: 0.14, cShare: 0.13, allowedTypes: ['snack'] },
+          { slotKey: 'pre',       time: '11h30', title: 'Pré-Treino Energético', pShare: 0.08, cShare: 0.15, allowedTypes: ['pre'] },
+          { slotKey: 'lunch',     time: '13h30', title: 'Almoço Pós-Treino', pShare: 0.28, cShare: 0.28, allowedTypes: ['lunch'] },
+          { slotKey: 'snack_pm',  time: '16h45', title: 'Lanche da Tarde', pShare: 0.12, cShare: 0.11, allowedTypes: ['snack'] },
+          { slotKey: 'dinner',    time: '20h15', title: 'Jantar', pShare: 0.20, cShare: 0.15, allowedTypes: ['dinner'] }
+        ];
+      }
+      if (wt === 'noite') {
+        return [
+          { slotKey: 'breakfast', time: '07h00', title: 'Café da Manhã', pShare: 0.18, cShare: 0.17, allowedTypes: ['breakfast'] },
+          { slotKey: 'snack_am',  time: '10h00', title: 'Lanche da Manhã (Rua)', pShare: 0.14, cShare: 0.13, allowedTypes: ['snack'] },
+          { slotKey: 'lunch',     time: '12h30', title: 'Almoço Estratégico', pShare: 0.25, cShare: 0.24, allowedTypes: ['lunch'] },
+          { slotKey: 'snack_pm',  time: '15h45', title: 'Lanche da Tarde', pShare: 0.12, cShare: 0.12, allowedTypes: ['snack'] },
+          { slotKey: 'pre',       time: '18h15', title: 'Pré-Treino Noturno', pShare: 0.09, cShare: 0.14, allowedTypes: ['pre'] },
+          { slotKey: 'dinner',    time: '20h30', title: 'Jantar Pós-Treino', pShare: 0.22, cShare: 0.20, allowedTypes: ['dinner'] }
+        ];
+      }
+      // Padrão: Tarde (15h00–16h00)
+      return [
+        { slotKey: 'breakfast', time: '07h00', title: 'Café da Manhã', pShare: 0.16, cShare: 0.16, allowedTypes: ['breakfast'] },
+        { slotKey: 'snack_am',  time: '10h00', title: 'Lanche da Manhã (Rua)', pShare: 0.16, cShare: 0.18, allowedTypes: ['snack'] },
+        { slotKey: 'lunch',     time: '12h30', title: 'Almoço Estratégico', pShare: 0.27, cShare: 0.25, allowedTypes: ['lunch'] },
+        { slotKey: 'pre',       time: '14h30', title: 'Pré-Treino', pShare: 0.06, cShare: 0.13, allowedTypes: ['pre'] },
+        { slotKey: 'post',      time: '16h30', title: 'Pós-Treino Rápido', pShare: 0.15, cShare: 0.14, allowedTypes: ['post', 'snack'] },
+        { slotKey: 'dinner',    time: '20h00', title: 'Jantar Saciante', pShare: 0.20, cShare: 0.14, allowedTypes: ['dinner'] }
       ];
+    }
 
-      // Filtrar receitas disponíveis baseadas nos checkboxes da despensa!
-      const availableRecipes = RECIPES.filter(r => {
-        return r.required.every(reqItem => appState.pantry[reqItem] === true);
+    /* ==========================================================================
+       5. ESCALONAMENTO PRECISO E CONSTRUTOR MODULAR (MODULAR MEAL BUILDER)
+       ========================================================================== */
+    function roundToStep(value, min, max, step) {
+      const clamped = Math.max(min, Math.min(max, value));
+      return Math.max(min, Math.round(clamped / step) * step);
+    }
+
+    // Escala um template garantindo que o título seja gerado DEPOIS do cálculo das quantidades!
+    function scaleTemplateToMacros(template, targetP, targetC, dayIndex) {
+      const activeComponents = [];
+      template.components.forEach(comp => {
+        if (comp.optional && !appState.pantry[comp.key]) return;
+        const ing = INGREDIENTS[comp.key];
+        if (!ing) return;
+        activeComponents.push({ ...comp, ing });
       });
 
-      DAYS.forEach(day => {
-        appState.plan[day.id] = [];
-        const t = day.workout ? targets.train : targets.rest;
+      const qtyMap = {};
+      let fixedP = 0, fixedC = 0;
 
-        slots.forEach(slot => {
-          // Achar a primeira receita disponível para o tipo de refeição
-          let candidates = availableRecipes.filter(r => r.slots.includes(slot.id));
-          
-          // Fallback de emergência caso o usuário desmarque absolutamente tudo
-          if(candidates.length === 0) {
-             candidates = RECIPES.filter(r => r.slots.includes(slot.id)); 
+      // 1. Define itens de quantidade fixa primeiro
+      activeComponents.forEach(c => {
+        if (c.role.startsWith('fixed')) {
+          const q = c.fixedQty || c.ing.min;
+          c.qty = q;
+          qtyMap[c.key] = q;
+          fixedP += q * c.ing.p;
+          fixedC += q * c.ing.c;
+        }
+      });
+
+      // 2. Escala a proteína primária para bater a meta de proteína do horário
+      const primaryProt = activeComponents.find(c => c.role === 'primary_protein');
+      if (primaryProt) {
+        const neededP = Math.max(8, targetP - fixedP);
+        const rawQty = neededP / primaryProt.ing.p;
+        const q = roundToStep(rawQty, primaryProt.ing.min, primaryProt.ing.max, primaryProt.ing.step);
+        primaryProt.qty = q;
+        qtyMap[primaryProt.key] = q;
+      }
+
+      // Soma o carboidrato já trazido pela proteína e itens fixos
+      let currentC = activeComponents.reduce((acc, c) => acc + ((c.qty || 0) * c.ing.c), 0);
+
+      // 3. Escala o carboidrato primário para atingir a meta de carboidrato do horário
+      const primaryCarb = activeComponents.find(c => c.role === 'primary_carb');
+      if (primaryCarb) {
+        const neededC = Math.max(10, targetC - currentC);
+        const rawQty = neededC / primaryCarb.ing.c;
+        const q = roundToStep(rawQty, primaryCarb.ing.min, primaryCarb.ing.max, primaryCarb.ing.step);
+        primaryCarb.qty = q;
+        qtyMap[primaryCarb.key] = q;
+      }
+
+      // 4. Monta a lista final de itens e soma os macros reais
+      let totalP = 0, totalC = 0, totalF = 0, totalKcal = 0;
+      const renderedItems = activeComponents.map(c => {
+        const q = c.qty || c.ing.min;
+        qtyMap[c.key] = q;
+        totalP += q * c.ing.p;
+        totalC += q * c.ing.c;
+        totalF += q * c.ing.f;
+        totalKcal += q * c.ing.kcal;
+        return {
+          key: c.key,
+          name: c.customName || c.ing.titleName,
+          qty: q,
+          unit: c.ing.unit
+        };
+      });
+
+      // Se for almoço/jantar e não estiver em modo 100% sem azeite em alguns dias, adiciona nota do fio de azeite (2ml)
+      let prepText = template.prepNote;
+      if ((template.slots.includes('lunch') || template.slots.includes('dinner')) && !appState.lowOil) {
+        totalF += 2;
+        totalKcal += 18;
+      }
+
+      // GERA O TÍTULO DINÂMICO USANDO OS NÚMEROS EXATOS DE qtyMap!
+      const generatedTitle = template.dynamicTitle(qtyMap);
+
+      return {
+        templateId: template.id,
+        title: generatedTitle,
+        tag: template.tag,
+        prepNote: prepText,
+        items: renderedItems,
+        macros: {
+          p: Math.round(totalP),
+          c: Math.round(totalC),
+          f: Math.round(totalF),
+          kcal: Math.round(totalKcal)
+        }
+      };
+    }
+
+    // CONSTRUTOR MODULAR DE REFEIÇÕES: Cria refeições 100% válidas combinando apenas os itens marcados na despensa!
+    function buildModularMealForSlot(slotType, targetP, targetC, dayIndex, optionOffset = 0) {
+      const checkedKeys = PANTRY_ORDER.filter(k => appState.pantry[k]);
+
+      // Filtra proteínas e carboidratos ativos na despensa adequados ao horário
+      let prefProteins = [];
+      let prefCarbs = [];
+
+      if (slotType === 'breakfast' || slotType === 'snack' || slotType === 'pre' || slotType === 'post') {
+        prefProteins = ['ovos', 'whey', 'frango', 'queijo_ricota', 'musculo', 'patinho', 'file_suino'].filter(k => appState.pantry[k]);
+        prefCarbs = ['cuscuz', 'pao_integral', 'aveia', 'banana', 'batata_doce', 'arroz', 'macarrao'].filter(k => appState.pantry[k]);
+      } else {
+        prefProteins = ['frango', 'file_suino', 'musculo', 'patinho', 'ovos', 'queijo_ricota', 'whey'].filter(k => appState.pantry[k]);
+        prefCarbs = ['arroz', 'macarrao', 'cuscuz', 'batata_doce', 'feijao', 'pao_integral', 'aveia', 'banana'].filter(k => appState.pantry[k]);
+      }
+
+      // Fallback seguro apenas dentro dos itens marcados
+      if (prefProteins.length === 0) prefProteins = checkedKeys.filter(k => INGREDIENTS[k].p >= 0.08);
+      if (prefCarbs.length === 0) prefCarbs = checkedKeys.filter(k => INGREDIENTS[k].c >= 0.12);
+
+      const pKey = prefProteins[(dayIndex + optionOffset + appState.variationSeed) % prefProteins.length] || checkedKeys[0];
+      const cKey = prefCarbs[(dayIndex * 2 + optionOffset + appState.variationSeed) % prefCarbs.length] || checkedKeys[checkedKeys.length - 1];
+
+      const pIng = INGREDIENTS[pKey];
+      const cIng = INGREDIENTS[cKey];
+
+      const components = [
+        { key: pKey, role: 'primary_protein', customName: pIng.titleName || pIng.label }
+      ];
+      if (cKey && cKey !== pKey) {
+        components.push({ key: cKey, role: 'primary_carb', customName: cIng.titleName || cIng.label });
+      }
+      // Se for almoço/jantar com arroz e feijão estiver marcado, inclui feijão
+      if ((slotType === 'lunch' || slotType === 'dinner') && cKey === 'arroz' && appState.pantry['feijao']) {
+        components.push({ key: 'feijao', role: 'fixed_carb', fixedQty: 90, customName: 'Feijão cozido' });
+      }
+
+      const modularTemplate = {
+        id: `mod_${slotType}_${pKey}_${cKey}`,
+        slots: [slotType],
+        required: [pKey, cKey].filter(Boolean),
+        tag: 'Combinação Modular da sua Despensa',
+        prepNote: 'Refeição montada sob medida combinando exclusivamente os ingredientes ativos na sua despensa.',
+        components,
+        dynamicTitle: (q) => {
+          const pPart = pKey === 'ovos'
+            ? `${q.ovos} ${q.ovos === 1 ? 'Ovo Inteiro' : 'Ovos Inteiros'}`
+            : `${pIng.titleName || pIng.label} (${q[pKey]}${pIng.unit})`;
+          if (!cKey || cKey === pKey) return pPart;
+          const cPart = `${cIng.titleName || cIng.label} (${q[cKey]}${cIng.unit})`;
+          const beanPart = q.feijao ? ` e Feijão (${q.feijao}g)` : '';
+          return `${pPart} com ${cPart}${beanPart}`;
+        }
+      };
+
+      return scaleTemplateToMacros(modularTemplate, targetP, targetC, dayIndex);
+    }
+
+    // Retorna todas as opções 100% compatíveis com a despensa atual para um horário
+    function getValidTemplatesForSlot(allowedTypes) {
+      return MEAL_TEMPLATES.filter(tpl => {
+        const slotMatches = tpl.slots.some(s => allowedTypes.includes(s));
+        if (!slotMatches) return false;
+        // FILTRO ESTRITO: TODOS os itens obrigatórios DEVEM estar marcados na despensa!
+        const allRequiredActive = tpl.required.every(reqKey => appState.pantry[reqKey] === true);
+        return allRequiredActive;
+      });
+    }
+
+    /* ==========================================================================
+       6. GERAÇÃO DO CARDÁPIO DE 7 DIAS DISTINTOS
+       ========================================================================== */
+    function generateWeeklyPlan() {
+      const targets = calculateNutritionTargets();
+      const usedMainIdsByDay = [];
+
+      DAYS_CONFIG.forEach((day, dIdx) => {
+        const workoutDay = isDayWorkout(dIdx);
+        const dayTargets = workoutDay ? targets.train : targets.rest;
+        const schedule = getDailySlotSchedule(workoutDay);
+
+        appState.weeklyPlan[day.id] = {
+          dayId: day.id,
+          dayName: day.full,
+          isWorkout: workoutDay,
+          targets: dayTargets,
+          meals: []
+        };
+
+        schedule.forEach((slot, sIdx) => {
+          const slotP = dayTargets.p * slot.pShare;
+          const slotC = dayTargets.c * slot.cShare;
+          const overrideKey = `${day.id}_${sIdx}`;
+
+          let validTemplates = getValidTemplatesForSlot(slot.allowedTypes);
+
+          // Prioriza rotina 100% na rua quando aplicável
+          if (appState.routine === 'rua_total') {
+            const streetPreferred = validTemplates.filter(t => t.routines && t.routines.includes('rua_total'));
+            if (streetPreferred.length > 0) validTemplates = streetPreferred;
           }
 
-          // Pega a receita e calcula porções matemáticas
-          let chosenRecipe = candidates[0]; // Na vida real, poderia rotacionar com day.id
-          let mealData = scaleRecipe(chosenRecipe, t.p * slot.pShare, t.c * slot.cShare);
-          
-          appState.plan[day.id].push({
-            label: slot.label,
-            name: mealData.name,
-            items: mealData.items,
-            macros: mealData.macros
+          let chosenMeal = null;
+
+          // Verifica se o usuário escolheu manualmente uma opção e se ela continua 100% válida na despensa
+          if (appState.customOverrides[overrideKey]) {
+            const customId = appState.customOverrides[overrideKey];
+            const foundTpl = validTemplates.find(t => t.id === customId);
+            if (foundTpl) {
+              chosenMeal = scaleTemplateToMacros(foundTpl, slotP, slotC, dIdx);
+            } else {
+              // Limpa imediatamente o override se o usuário desmarcou algum ingrediente dele
+              delete appState.customOverrides[overrideKey];
+            }
+          }
+
+          if (!chosenMeal) {
+            if (validTemplates.length > 0) {
+              // Rotaciona de forma inteligente entre Segunda e Domingo para que os 7 dias sejam diferentes
+              const rotationOffset = dIdx + (sIdx * 2) + appState.variationSeed;
+              let pickIdx = rotationOffset % validTemplates.length;
+              let chosenTpl = validTemplates[pickIdx];
+
+              // Evita repetir a mesma receita do almoço no jantar do mesmo dia
+              if (slot.slotKey === 'dinner' && validTemplates.length > 1) {
+                const lunchMeal = appState.weeklyPlan[day.id].meals.find(m => m.slotKey === 'lunch');
+                if (lunchMeal && lunchMeal.templateId === chosenTpl.id) {
+                  chosenTpl = validTemplates[(pickIdx + 1) % validTemplates.length];
+                }
+              }
+
+              chosenMeal = scaleTemplateToMacros(chosenTpl, slotP, slotC, dIdx);
+            } else {
+              // Nenhuma receita pré-definida tem todos os itens marcados -> Construtor Modular entra em ação!
+              chosenMeal = buildModularMealForSlot(slot.allowedTypes[0], slotP, slotC, dIdx, sIdx);
+            }
+          }
+
+          appState.weeklyPlan[day.id].meals.push({
+            slotIndex: sIdx,
+            slotKey: slot.slotKey,
+            time: slot.time,
+            slotTitle: slot.title,
+            allowedTypes: slot.allowedTypes,
+            targetP: slotP,
+            targetC: slotC,
+            ...chosenMeal
           });
         });
       });
     }
 
     /* ==========================================================================
-       4. INTEGRAÇÃO COM A UI E EVENTOS
+       7. INTERATIVIDADE: DESPENSA, TROCA DE REFEIÇÃO, ABAS E EVENTOS
        ========================================================================== */
     function togglePantryItem(key) {
-      appState.pantry[key] = !appState.pantry[key];
-      // A mágica acontece aqui: recalcula e re-renderiza Imediatamente!
-      generatePlan();
-      renderUI();
-      showToast('Cardápio recalculado (ingrediente alterado)!');
+      const currentVal = appState.pantry[key];
+      if (currentVal) {
+        // Verifica se é a última proteína ou último carboidrato ativo para não zerar tudo
+        const activeProteins = PANTRY_ORDER.filter(k => appState.pantry[k] && k !== key && INGREDIENTS[k].role.includes('protein'));
+        const activeCarbs = PANTRY_ORDER.filter(k => appState.pantry[k] && k !== key && INGREDIENTS[k].role.includes('carb'));
+        if (activeProteins.length === 0 && INGREDIENTS[key].role.includes('protein')) {
+          showToast('Mantenha pelo menos 1 fonte de proteína ativa na despensa!');
+          return;
+        }
+        if (activeCarbs.length === 0 && INGREDIENTS[key].role.includes('carb')) {
+          showToast('Mantenha pelo menos 1 fonte de carboidrato ativa na despensa!');
+          return;
+        }
+      }
+
+      appState.pantry[key] = !currentVal;
+
+      // Remove qualquer override customizado que use o ingrediente desmarcado
+      if (!appState.pantry[key]) {
+        Object.keys(appState.customOverrides).forEach(ovKey => {
+          const tplId = appState.customOverrides[ovKey];
+          const tpl = MEAL_TEMPLATES.find(t => t.id === tplId);
+          if (tpl && tpl.required.includes(key)) {
+            delete appState.customOverrides[ovKey];
+          }
+        });
+      }
+
+      generateWeeklyPlan();
+      renderAll();
+      const actionTxt = appState.pantry[key] ? 'adicionado ao' : 'removido de todo o';
+      showToast(`${INGREDIENTS[key].label} ${actionTxt} cardápio!`);
     }
 
-    function handleGeneratePlan(e) {
-      e.preventDefault();
-      appState.weight = parseFloat(document.getElementById('input-weight').value);
-      appState.proteinRatio = parseFloat(document.getElementById('input-protein-ratio').value);
+    function readFormInputsToState() {
+      appState.sex = document.getElementById('input-sex').value;
+      appState.age = parseFloat(document.getElementById('input-age').value) || 35;
+      appState.height = parseFloat(document.getElementById('input-height').value) || 170;
+      appState.weight = parseFloat(document.getElementById('input-weight').value) || 75;
       appState.goal = document.getElementById('input-goal').value;
-      
-      generatePlan();
-      renderUI();
-      showToast('Novas metas corporais aplicadas!');
-      if(window.innerWidth < 1024) toggleConfigPanel();
+      appState.freq = parseInt(document.getElementById('input-freq').value, 10);
+      appState.workoutTime = document.getElementById('input-workout-time').value;
+      appState.proteinRatio = parseFloat(document.getElementById('input-protein-ratio').value) || 2.0;
+      appState.routine = document.getElementById('input-routine').value;
+      appState.lowOil = document.getElementById('input-low-oil').checked;
+
+      // Oculta seletor de horário de treino se for Sedentário (0x)
+      const wtWrapper = document.getElementById('workout-time-wrapper');
+      if (appState.freq === 0) {
+        wtWrapper.classList.add('opacity-40', 'pointer-events-none');
+      } else {
+        wtWrapper.classList.remove('opacity-40', 'pointer-events-none');
+      }
+
+      document.getElementById('protein-slider-label').textContent = appState.proteinRatio.toFixed(1).replace('.', ',') + ' g/kg';
     }
 
-    function setDay(dayId) {
+    function onProfileInputChange() {
+      readFormInputsToState();
+      generateWeeklyPlan();
+      renderAll();
+    }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      onProfileInputChange();
+      showToast('Cardápio individual recalculado com sucesso!');
+      if (window.innerWidth < 1024) toggleConfigPanel();
+    }
+
+    function randomizeMenuVariation() {
+      appState.variationSeed += 1;
+      appState.customOverrides = {};
+      generateWeeklyPlan();
+      renderAll();
+      showToast('Nova variação semanal gerada para o seu perfil!');
+    }
+
+    function resetDefaultProfile() {
+      document.getElementById('input-sex').value = 'M';
+      document.getElementById('input-age').value = 42;
+      document.getElementById('input-height').value = 182;
+      document.getElementById('input-weight').value = 106;
+      document.getElementById('input-goal').value = 'recomp';
+      document.getElementById('input-freq').value = '5';
+      document.getElementById('input-workout-time').value = 'tarde';
+      document.getElementById('input-protein-ratio').value = 2.1;
+      document.getElementById('input-routine').value = 'misto';
+      document.getElementById('input-low-oil').checked = true;
+
+      setDefaultPantry();
+      appState.customOverrides = {};
+      appState.variationSeed = 0;
+      onProfileInputChange();
+      showToast('Perfil original restaurado!');
+    }
+
+    // Modal de Troca de Refeição
+    let currentSwapContext = null;
+
+    function openSwapModal(dayId, slotIndex) {
+      const dayPlan = appState.weeklyPlan[dayId];
+      const meal = dayPlan.meals[slotIndex];
+      currentSwapContext = { dayId, slotIndex };
+
+      document.getElementById('swap-modal-slot').textContent = `${dayPlan.dayName} • ${meal.time} (${meal.slotTitle})`;
+
+      const validTpls = getValidTemplatesForSlot(meal.allowedTypes);
+      const dayIdx = DAYS_CONFIG.findIndex(d => d.id === dayId);
+
+      // Gera as opções pré-calculadas para o perfil
+      const optionsHtml = [];
+      validTpls.forEach(tpl => {
+        const preview = scaleTemplateToMacros(tpl, meal.targetP, meal.targetC, dayIdx);
+        const isCurrent = preview.title === meal.title;
+        const itemsSummary = preview.items.map(i => `${i.name}: <strong>${i.qty}${i.unit}</strong>`).join(' &bull; ');
+
+        optionsHtml.push(`
+          <div class="p-3.5 rounded-xl border ${isCurrent ? 'border-forest-700 bg-forest-50/60' : 'border-bordersoft bg-white hover:border-forest-600'} transition flex flex-col justify-between gap-2">
+            <div>
+              <div class="flex items-center justify-between gap-2">
+                <h4 class="text-sm font-extrabold text-slate-900">${preview.title}</h4>
+                <span class="text-xs font-extrabold text-forest-800 bg-forest-100 px-2 py-0.5 rounded-md shrink-0 tabular-nums">${preview.macros.kcal} kcal</span>
+              </div>
+              <p class="text-xs text-slate-600 mt-1">${itemsSummary}</p>
+            </div>
+            <div class="flex items-center justify-between pt-2 border-t border-slate-100">
+              <span class="text-[11px] font-bold text-slate-500 tabular-nums">Prot: ${preview.macros.p}g &bull; Carb: ${preview.macros.c}g &bull; Gord: ${preview.macros.f}g</span>
+              <button type="button" onclick="applyMealSwap('${tpl.id}')" class="px-3 py-1.5 rounded-lg text-xs font-bold ${isCurrent ? 'bg-forest-800 text-white' : 'bg-forest-100 text-forest-800 hover:bg-forest-700 hover:text-white'} transition">
+                ${isCurrent ? '✓ Selecionado' : 'Escolher Opção'}
+              </button>
+            </div>
+          </div>
+        `);
+      });
+
+      // Adiciona também 2 opções modulares extras usando os itens da despensa
+      for (let modIdx = 0; modIdx < 2; modIdx++) {
+        const modMeal = buildModularMealForSlot(meal.allowedTypes[0], meal.targetP, meal.targetC, dayIdx, modIdx + 1);
+        const itemsSummary = modMeal.items.map(i => `${i.name}: <strong>${i.qty}${i.unit}</strong>`).join(' &bull; ');
+        optionsHtml.push(`
+          <div class="p-3.5 rounded-xl border border-bordersoft bg-surface/60 hover:border-forest-600 transition flex flex-col justify-between gap-2">
+            <div>
+              <div class="flex items-center justify-between gap-2">
+                <h4 class="text-sm font-extrabold text-slate-900">${modMeal.title}</h4>
+                <span class="text-xs font-extrabold text-forest-800 bg-forest-100 px-2 py-0.5 rounded-md shrink-0 tabular-nums">${modMeal.macros.kcal} kcal</span>
+              </div>
+              <p class="text-xs text-slate-600 mt-1">${itemsSummary}</p>
+            </div>
+            <div class="flex items-center justify-between pt-2 border-t border-slate-100">
+              <span class="text-[11px] font-bold text-slate-500 tabular-nums">Prot: ${modMeal.macros.p}g &bull; Carb: ${modMeal.macros.c}g &bull; Gord: ${modMeal.macros.f}g</span>
+              <button type="button" onclick="applyModularSwap(${modIdx + 1})" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-forest-100 text-forest-800 hover:bg-forest-700 hover:text-white transition">
+                Escolher Modular
+              </button>
+            </div>
+          </div>
+        `);
+      }
+
+      document.getElementById('swap-modal-list').innerHTML = optionsHtml.join('');
+      document.getElementById('swap-modal').classList.remove('hidden');
+    }
+
+    function closeSwapModal() {
+      document.getElementById('swap-modal').classList.add('hidden');
+      currentSwapContext = null;
+    }
+
+    function applyMealSwap(templateId) {
+      if (!currentSwapContext) return;
+      const { dayId, slotIndex } = currentSwapContext;
+      appState.customOverrides[`${dayId}_${slotIndex}`] = templateId;
+      closeSwapModal();
+      generateWeeklyPlan();
+      renderAll();
+      showToast('Refeição substituída mantendo suas metas!');
+    }
+
+    function applyModularSwap(offset) {
+      if (!currentSwapContext) return;
+      const { dayId, slotIndex } = currentSwapContext;
+      const dayPlan = appState.weeklyPlan[dayId];
+      const meal = dayPlan.meals[slotIndex];
+      const dayIdx = DAYS_CONFIG.findIndex(d => d.id === dayId);
+      const modMeal = buildModularMealForSlot(meal.allowedTypes[0], meal.targetP, meal.targetC, dayIdx, offset);
+
+      dayPlan.meals[slotIndex] = {
+        ...meal,
+        ...modMeal
+      };
+      closeSwapModal();
+      renderAll();
+      showToast('Combinação modular aplicada!');
+    }
+
+    /* ==========================================================================
+       8. RENDERIZAÇÃO COMPLETA DA INTERFACE
+       ========================================================================== */
+    function renderAll() {
+      renderTopDashboard();
+      renderHydrationTracker();
+      renderPantryChips();
+      renderDaySelectorBar();
+      renderWeeklyMenuArea();
+      renderMealPrepArea();
+      renderShoppingListArea();
+      renderStreetGuideArea();
+    }
+
+    function renderTopDashboard() {
+      const t = calculateNutritionTargets();
+      document.getElementById('display-bmr').textContent = t.bmr.toLocaleString('pt-BR') + ' kcal';
+      document.getElementById('display-tdee').textContent = t.tdee.toLocaleString('pt-BR') + ' kcal';
+
+      const goalLabels = { cut: 'Emagrecimento', recomp: 'Recomposição', bulk: 'Hipertrofia' };
+      document.getElementById('badge-goal-label').textContent = goalLabels[appState.goal];
+
+      const freq = parseInt(appState.freq, 10);
+      document.getElementById('train-card-title').textContent =
+        freq === 0 ? 'Meta Diária (Rotina Sem Musculação)' :
+        freq === 3 ? 'Dias de Treino (Seg, Qua e Sex)' :
+        freq === 6 ? 'Dias de Treino (Seg a Sáb)' : 'Dias de Treino (Seg a Sex)';
+
+      document.getElementById('rest-card-title').textContent =
+        freq === 0 ? 'Fins de Semana (Sáb e Dom)' :
+        freq === 3 ? 'Dias sem Treino (Ter, Qui, Sáb, Dom)' :
+        freq === 6 ? 'Dia de Descanso (Domingo)' : 'Dias de Descanso (Sáb e Dom)';
+
+      document.getElementById('summary-train-kcal').textContent = t.train.kcal.toLocaleString('pt-BR') + ' kcal';
+      const deltaSign = t.train.delta > 0 ? '+' : '';
+      document.getElementById('summary-train-delta').textContent = `${deltaSign}${t.train.delta} kcal (${t.train.delta <= 0 ? 'déficit' : 'superávit'})`;
+      document.getElementById('summary-train-p').textContent = t.train.p + 'g';
+      document.getElementById('summary-train-pkg').textContent = appState.proteinRatio.toFixed(1).replace('.', ',') + ' g/kg';
+      document.getElementById('summary-train-c').textContent = t.train.c + 'g';
+      document.getElementById('summary-train-f').textContent = t.train.f + 'g';
+      document.getElementById('summary-oil-tag').textContent = appState.lowOil ? 'Mín. azeite' : 'Moderada';
+
+      document.getElementById('summary-rest-kcal').textContent = t.rest.kcal.toLocaleString('pt-BR') + ' kcal';
+      document.getElementById('summary-rest-p').textContent = t.rest.p + 'g';
+      document.getElementById('summary-rest-pkg').textContent = appState.proteinRatio.toFixed(1).replace('.', ',') + ' g/kg';
+      document.getElementById('summary-rest-c').textContent = t.rest.c + 'g';
+      document.getElementById('summary-rest-f').textContent = t.rest.f + 'g';
+    }
+
+    function renderHydrationTracker() {
+      const w = parseFloat(appState.weight) || 75;
+      const minL = (w * 0.035).toFixed(1).replace('.', ',');
+      const maxL = (w * 0.040).toFixed(1).replace('.', ',');
+      const totalBottles = Math.max(5, Math.min(10, Math.round((w * 0.038) / 0.5)));
+
+      document.getElementById('hydration-target-text').textContent = `${minL} a ${maxL} L`;
+      const consumedL = (appState.waterBottles * 0.5).toFixed(1).replace('.', ',');
+      document.getElementById('hydration-status-text').innerHTML =
+        `Registrado hoje: <strong class="text-forest-800">${consumedL} L</strong> (${appState.waterBottles}/${totalBottles} garrafas de 500ml)`;
+
+      const bottlesHtml = [];
+      for (let i = 1; i <= totalBottles; i++) {
+        const active = i <= appState.waterBottles;
+        bottlesHtml.push(`
+          <button type="button" onclick="toggleWaterBottle(${i})" class="py-2 px-2 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-1 ${active ? 'bg-forest-700 text-white border-forest-700 shadow-xs' : 'bg-surface text-slate-400 border-bordersoft hover:border-forest-600'}">
+            <span>💧</span>
+            <span class="text-[10px]">500ml</span>
+          </button>
+        `);
+      }
+      document.getElementById('hydration-bottles').innerHTML = bottlesHtml.join('');
+    }
+
+    function toggleWaterBottle(idx) {
+      appState.waterBottles = appState.waterBottles === idx ? idx - 1 : idx;
+      renderHydrationTracker();
+    }
+
+    function resetHydration() {
+      appState.waterBottles = 0;
+      renderHydrationTracker();
+    }
+
+    function renderPantryChips() {
+      const container = document.getElementById('pantry-chips-container');
+      container.innerHTML = PANTRY_ORDER.map(key => {
+        const item = INGREDIENTS[key];
+        const active = appState.pantry[key];
+        const cls = active
+          ? 'bg-forest-800 text-white border-forest-800 shadow-2xs'
+          : 'bg-surface text-slate-400 border-bordersoft line-through hover:text-slate-600';
+        const icon = active ? '✓' : '✕';
+        return `
+          <button type="button" onclick="togglePantryItem('${key}')" class="px-2.5 py-1.5 rounded-xl text-xs font-semibold border transition flex items-center gap-1 ${cls}">
+            <span>${icon}</span>
+            <span>${item.label}</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function renderDaySelectorBar() {
+      const bar = document.getElementById('day-selector-bar');
+      bar.innerHTML = DAYS_CONFIG.map((d, idx) => {
+        const workout = isDayWorkout(idx);
+        const isSel = !appState.viewAllDays && appState.selectedDay === d.id;
+        const dotColor = workout ? 'bg-emerald-400' : 'bg-amber-300';
+        const btnCls = isSel
+          ? 'bg-forest-800 text-white border-forest-800'
+          : 'bg-surface text-slate-700 border-bordersoft hover:bg-slate-100';
+        return `
+          <button type="button" onclick="selectSingleDay('${d.id}')" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold border transition flex items-center gap-1.5 shrink-0 ${btnCls}">
+            <span>${d.short}</span>
+            <span class="w-1.5 h-1.5 rounded-full ${dotColor}"></span>
+          </button>
+        `;
+      }).join('');
+
+      const viewAllBtn = document.getElementById('btn-view-all-days');
+      if (appState.viewAllDays) {
+        viewAllBtn.className = 'px-3 py-1.5 rounded-xl text-xs font-bold border border-forest-800 bg-forest-800 text-white transition shrink-0';
+      } else {
+        viewAllBtn.className = 'px-3 py-1.5 rounded-xl text-xs font-bold border border-bordersoft bg-surface text-slate-700 hover:bg-slate-100 transition shrink-0';
+      }
+    }
+
+    function selectSingleDay(dayId) {
       appState.selectedDay = dayId;
-      renderMenu();
+      appState.viewAllDays = false;
+      renderDaySelectorBar();
+      renderWeeklyMenuArea();
+    }
+
+    function toggleAllDaysView() {
+      appState.viewAllDays = !appState.viewAllDays;
+      renderDaySelectorBar();
+      renderWeeklyMenuArea();
+    }
+
+    function renderWeeklyMenuArea() {
+      const container = document.getElementById('menu-render-area');
+      const daysToRender = appState.viewAllDays
+        ? DAYS_CONFIG.map(d => d.id)
+        : [appState.selectedDay];
+
+      const htmlBlocks = daysToRender.map(dayId => {
+        const dayPlan = appState.weeklyPlan[dayId];
+        if (!dayPlan) return '';
+
+        let sumP = 0, sumC = 0, sumF = 0, sumKcal = 0;
+        dayPlan.meals.forEach(m => {
+          sumP += m.macros.p;
+          sumC += m.macros.c;
+          sumF += m.macros.f;
+          sumKcal += m.macros.kcal;
+        });
+
+        const headerBg = dayPlan.isWorkout ? 'bg-forest-800' : 'bg-slateblue-700';
+        const subBadge = dayPlan.isWorkout
+          ? `Dia de Treino (${ document.getElementById('input-workout-time').selectedOptions[0].text })`
+          : (parseInt(appState.freq, 10) === 0 ? 'Rotina Personalizada (Sem Musculação)' : 'Dia de Descanso / Recuperação');
+
+        const mealsHtml = dayPlan.meals.map((meal, sIdx) => {
+          const itemsRows = meal.items.map(it => `
+            <div class="flex justify-between items-center py-1.5 border-b border-slate-100 last:border-none text-xs sm:text-sm">
+              <span class="text-slate-700 font-medium">${it.name}</span>
+              <span class="font-extrabold text-slate-900 tabular-nums">${it.qty}${it.unit}</span>
+            </div>
+          `).join('');
+
+          return `
+            <div class="bg-white rounded-2xl border border-bordersoft p-4 shadow-xs">
+              <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="text-xs font-extrabold text-forest-800 bg-forest-50 px-2.5 py-0.5 rounded-md border border-forest-100 tabular-nums">${meal.time}</span>
+                  <span class="text-xs font-bold uppercase tracking-wider text-slate-500">${meal.slotTitle}</span>
+                  <span class="text-[11px] font-semibold text-slate-600 bg-surface px-2 py-0.5 rounded-md border border-bordersoft">${meal.tag}</span>
+                </div>
+                <button type="button" onclick="openSwapModal('${dayId}', ${sIdx})" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold border border-bordersoft bg-surface hover:bg-forest-50 hover:border-forest-600 text-slate-700 transition">
+                  <span>⇄ Trocar Refeição</span>
+                </button>
+              </div>
+
+              <!-- TÍTULO 100% DINÂMICO E SINCRONIZADO COM AS QUANTIDADES ABAIXO -->
+              <h4 class="text-sm sm:text-base font-extrabold text-slate-900 mb-2.5">${meal.title}</h4>
+
+              <div class="bg-surface/70 rounded-xl px-3.5 py-2 border border-slate-100 mb-3">
+                ${itemsRows}
+              </div>
+
+              <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
+                <span class="text-slate-500 italic text-[11px]">${meal.prepNote}</span>
+                <div class="flex items-center gap-1.5 shrink-0 tabular-nums">
+                  <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-bold text-[11px]">Prot: ${meal.macros.p}g</span>
+                  <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-bold text-[11px]">Carb: ${meal.macros.c}g</span>
+                  <span class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-bold text-[11px]">Gord: ${meal.macros.f}g</span>
+                  <span class="px-2.5 py-0.5 rounded-md bg-forest-800 text-white font-extrabold text-[11px]">${meal.macros.kcal} kcal</span>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        return `
+          <div class="space-y-3">
+            <div class="${headerBg} text-white rounded-2xl px-5 py-3.5 flex flex-wrap items-center justify-between gap-2 shadow-sm">
+              <div>
+                <h3 class="text-base sm:text-lg font-extrabold leading-tight">${dayPlan.dayName}</h3>
+                <span class="text-xs text-emerald-100/90">${subBadge}</span>
+              </div>
+              <div class="text-xs sm:text-sm font-extrabold bg-black/20 px-3.5 py-1.5 rounded-xl tabular-nums">
+                ${sumP}g P &bull; ${sumC}g C &bull; ${sumF}g G &bull; <span class="text-emerald-300">${sumKcal.toLocaleString('pt-BR')} kcal</span>
+              </div>
+            </div>
+            <div class="space-y-3">
+              ${mealsHtml}
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = htmlBlocks.join('');
+    }
+
+    /* ==========================================================================
+       9. MEAL PREP DINÂMICO E LISTA DE COMPRAS SOMADA DO CARDÁPIO REAL
+       ========================================================================== */
+    function aggregateWeeklyIngredients() {
+      const totals = {};
+      Object.values(appState.weeklyPlan).forEach(day => {
+        day.meals.forEach(meal => {
+          meal.items.forEach(item => {
+            if (!totals[item.key]) {
+              totals[item.key] = {
+                key: item.key,
+                ing: INGREDIENTS[item.key],
+                cookedTotal: 0,
+                occurrences: 0
+              };
+            }
+            totals[item.key].cookedTotal += item.qty;
+            totals[item.key].occurrences += 1;
+          });
+        });
+      });
+      return totals;
+    }
+
+    function renderMealPrepArea() {
+      const totals = aggregateWeeklyIngredients();
+      const steps = [];
+
+      // Passo 1: Carnes de panela de pressão / cozimento longo ativas no cardápio
+      const pressureMeats = ['frango', 'musculo'].filter(k => totals[k] && totals[k].cookedTotal > 0);
+      if (pressureMeats.length > 0) {
+        const desc = pressureMeats.map(k => {
+          const rawKg = ((totals[k].cookedTotal * totals[k].ing.rawFactor) / 1000).toFixed(2).replace('.', ',');
+          return `<strong>${rawKg} kg de ${totals[k].ing.label} (peso cru)</strong> para render ${totals[k].cookedTotal}g prontos`;
+        }).join(' e ');
+        steps.push({
+          time: '00–20 min',
+          title: '1. Cozimento Rápido na Panela de Pressão',
+          body: `Separe ${desc}. Cozinhe com alho, cebola, louro, páprica e sal por 20 minutos na pressão. Para o frango, escorra o caldo e sacuda a panela fechada por 15 segundos para desfiar instantaneamente.`
+        });
+      }
+
+      // Passo 2: Grelhados e Refogados + Ovos
+      const skilletMeats = ['file_suino', 'patinho'].filter(k => totals[k] && totals[k].cookedTotal > 0);
+      const eggsTotal = totals['ovos'] ? totals['ovos'].cookedTotal : 0;
+      if (skilletMeats.length > 0 || eggsTotal > 0) {
+        const parts = [];
+        skilletMeats.forEach(k => {
+          const rawKg = ((totals[k].cookedTotal * totals[k].ing.rawFactor) / 1000).toFixed(2).replace('.', ',');
+          parts.push(`grelhe/refogue <strong>${rawKg} kg de ${totals[k].ing.label}</strong> em frigideira antiaderente`);
+        });
+        if (eggsTotal > 0) {
+          parts.push(`tenha <strong>${eggsTotal} ovos inteiros</strong> na geladeira (cozinhe de 6 a 8 unidades por 9 minutos para os lanches rápidos da semana)`);
+        }
+        steps.push({
+          time: '20–40 min',
+          title: '2. Proteínas de Frigideira & Ovos em Paralelo',
+          body: `Enquanto a panela de pressão trabalha, ${parts.join(' e ')}.`
+        });
+      }
+
+      // Passo 3: Base de Carboidratos da Despensa
+      const activeCarbs = ['arroz', 'feijao', 'macarrao', 'batata_doce', 'cuscuz'].filter(k => totals[k] && totals[k].cookedTotal > 0);
+      if (activeCarbs.length > 0) {
+        const carbList = activeCarbs.map(k => `<strong>${totals[k].ing.label}</strong> (${totals[k].cookedTotal}g cozidos na semana)`).join(', ');
+        steps.push({
+          time: '40–50 min',
+          title: '3. Carboidratos Base da Semana',
+          body: `Deixe porcionado para a semana: ${carbList}. Se você almoça em buffet self-service nos dias úteis, cozinhe em casa apenas a quantidade referente aos jantares.`
+        });
+      }
+
+      // Passo 4: Kits Secos e Potes de Rua
+      steps.push({
+        time: '50–60 min',
+        title: '4. Porcionamento em Potes: Geladeira vs. Freezer',
+        body: `Divida as proteínas prontas na balança conforme as gramagens do seu cardápio: mantenha os potes de <strong>Segunda a Quarta na prateleira superior da geladeira</strong> e congele os potes de <strong>Quinta e Sexta no freezer</strong> (desça para a geladeira na quarta-feira à noite).`
+      });
+
+      document.getElementById('mealprep-steps-area').innerHTML = steps.map(s => `
+        <div class="p-4 rounded-xl bg-surface border border-bordersoft">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="text-[11px] font-extrabold bg-forest-800 text-white px-2.5 py-0.5 rounded-md">${s.time}</span>
+            <h4 class="text-sm font-extrabold text-forest-900">${s.title}</h4>
+          </div>
+          <p class="text-xs text-slate-700 leading-relaxed">${s.body}</p>
+        </div>
+      `).join('');
+    }
+
+    function renderShoppingListArea() {
+      const totals = aggregateWeeklyIngredients();
+      const grouped = {};
+
+      Object.values(totals).forEach(entry => {
+        const cat = entry.ing.category;
+        if (!grouped[cat]) grouped[cat] = [];
+
+        const rawQty = Math.ceil(entry.cookedTotal * entry.ing.rawFactor);
+        let displayQty = `${rawQty}${entry.ing.unit}`;
+        if (entry.ing.unit === 'g' && rawQty >= 1000) {
+          displayQty = `${(rawQty / 1000).toFixed(2).replace('.', ',')} kg`;
+        } else if (entry.ing.unit === 'ml' && rawQty >= 1000) {
+          displayQty = `${(rawQty / 1000).toFixed(1).replace('.', ',')} L`;
+        }
+
+        grouped[cat].push({
+          key: entry.key,
+          label: entry.ing.label,
+          displayQty,
+          cookedTotal: entry.cookedTotal,
+          unit: entry.ing.unit
+        });
+      });
+
+      const container = document.getElementById('shopping-list-area');
+      container.innerHTML = Object.keys(grouped).map(catName => {
+        const rows = grouped[catName].map(item => {
+          const checked = !!appState.checkedShopping[item.key];
+          return `
+            <label class="flex items-center justify-between py-2 border-b border-slate-100 last:border-none cursor-pointer text-xs">
+              <span class="flex items-center gap-2 ${checked ? 'line-through text-slate-400' : 'text-slate-800 font-medium'}">
+                <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleShopCheck('${item.key}')" class="rounded text-forest-700 focus:ring-forest-700" />
+                <span>${item.label}</span>
+              </span>
+              <span class="font-extrabold text-forest-800 bg-forest-50 px-2 py-0.5 rounded-md tabular-nums">${item.displayQty}</span>
+            </label>
+          `;
+        }).join('');
+
+        return `
+          <div class="p-4 rounded-xl bg-surface border border-bordersoft">
+            <h4 class="text-xs font-extrabold uppercase tracking-wider text-forest-800 mb-2 pb-1.5 border-b border-bordersoft">${catName}</h4>
+            <div>${rows}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function toggleShopCheck(key) {
+      appState.checkedShopping[key] = !appState.checkedShopping[key];
+      renderShoppingListArea();
+    }
+
+    function copyShoppingList() {
+      const totals = aggregateWeeklyIngredients();
+      const lines = ['*🛒 LISTA DE COMPRAS SEMANAL — NUTRIBASIC PRO*'];
+      Object.values(totals).forEach(entry => {
+        const rawQty = Math.ceil(entry.cookedTotal * entry.ing.rawFactor);
+        let displayQty = `${rawQty}${entry.ing.unit}`;
+        if (entry.ing.unit === 'g' && rawQty >= 1000) displayQty = `${(rawQty / 1000).toFixed(2).replace('.', ',')} kg`;
+        if (entry.ing.unit === 'ml' && rawQty >= 1000) displayQty = `${(rawQty / 1000).toFixed(1).replace('.', ',')} L`;
+        lines.push(`- ${entry.ing.label}: *${displayQty}*`);
+      });
+
+      const textArea = document.createElement('textarea');
+      textArea.value = lines.join('\n');
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      showToast('Lista de compras copiada para o WhatsApp!');
+    }
+
+    function renderStreetGuideArea() {
+      const t = calculateNutritionTargets();
+      const lunchProt = Math.round(t.train.p * 0.27);
+      const chickenGrams = Math.round((lunchProt / 0.31) / 10) * 10;
+      const riceGrams = Math.round(((t.train.c * 0.25) / 0.28) / 10) * 10;
+
+      document.getElementById('street-guide-portions').innerHTML = `
+        <li class="p-2.5 rounded-xl bg-surface border border-slate-100"><strong>Proteína no Almoço (~${chickenGrams}g grelhado):</strong> Equivale a cerca de ${Math.max(1, Math.round(chickenGrams / 95))} filés médios do tamanho da palma da sua mão aberta.</li>
+        <li class="p-2.5 rounded-xl bg-surface border border-slate-100"><strong>Arroz / Carboidrato (~${riceGrams}g cozido):</strong> Equivale a aproximadamente ${Math.max(2, Math.round(riceGrams / 38))} colheres de sopa cheias no buffet.</li>
+        <li class="p-2.5 rounded-xl bg-surface border border-slate-100"><strong>Feijão (~100g):</strong> 1 concha média rasa (metade grão, metade caldo).</li>
+        <li class="p-2.5 rounded-xl bg-surface border border-slate-100"><strong>Vegetais e Folhas:</strong> Preencha 40% a 50% do prato com folhas cruas e legumes no vapor para garantir saciedade durante toda a tarde na rua.</li>
+      `;
+    }
+
+    function switchTab(tabName) {
+      appState.activeTab = tabName;
+      ['cardapio', 'mealprep', 'compras', 'guiarua'].forEach(t => {
+        const content = document.getElementById(`tab-content-${t}`);
+        const btn = document.getElementById(`tab-btn-${t}`);
+        if (t === tabName) {
+          content.classList.remove('hidden');
+          btn.className = 'py-2.5 px-3 rounded-xl text-xs font-extrabold transition flex items-center justify-center gap-1.5 bg-forest-800 text-white shadow-xs';
+        } else {
+          content.classList.add('hidden');
+          btn.className = 'py-2.5 px-3 rounded-xl text-xs font-extrabold transition flex items-center justify-center gap-1.5 text-slate-600 hover:bg-surface';
+        }
+      });
     }
 
     function toggleConfigPanel() {
       document.getElementById('config-panel').classList.toggle('hidden');
-    }
-
-    /* ==========================================================================
-       5. RENDERIZAÇÃO DA TELA (Vanilla JS Injetando HTML)
-       ========================================================================== */
-    function renderUI() {
-      // 1. Resumos no Topo
-      const t = calcDailyTargets();
-      document.getElementById('display-bmr').textContent = t.bmr + ' kcal';
-      document.getElementById('display-tdee').textContent = t.tdee + ' kcal';
-      
-      document.getElementById('summary-train-kcal').textContent = t.train.kcal + ' kcal';
-      document.getElementById('summary-train-p').textContent = t.train.p + 'g';
-      document.getElementById('summary-train-c').textContent = t.train.c + 'g';
-      document.getElementById('summary-train-f').textContent = t.train.f + 'g';
-      
-      document.getElementById('summary-rest-kcal').textContent = t.rest.kcal + ' kcal';
-      document.getElementById('summary-rest-p').textContent = t.rest.p + 'g';
-      document.getElementById('summary-rest-c').textContent = t.rest.c + 'g';
-      document.getElementById('summary-rest-f').textContent = t.rest.f + 'g';
-
-      // 2. Botões da Despensa (Pílulas Reativas)
-      const pantryContainer = document.getElementById('pantry-chips-container');
-      pantryContainer.innerHTML = PANTRY_CATALOG.map(item => {
-        const isActive = appState.pantry[item.key];
-        const style = isActive ? 'bg-forest-800 text-white border-forest-800' : 'bg-surface text-slate-500 border-bordersoft';
-        const icon = isActive ? '✓' : '+';
-        return `<button type="button" onclick="togglePantryItem('${item.key}')" class="px-2.5 py-1.5 rounded-xl text-xs font-semibold border transition flex items-center gap-1 ${style}"><span>${icon}</span> ${item.label}</button>`;
-      }).join('');
-
-      // 3. Abas de Dias
-      const daysBar = document.getElementById('day-selector-bar');
-      daysBar.innerHTML = DAYS.map(d => {
-        const isSel = appState.selectedDay === d.id;
-        const color = isSel ? 'bg-forest-800 text-white' : 'bg-surface text-slate-700 hover:bg-slate-100';
-        return `<button onclick="setDay('${d.id}')" class="px-4 py-2 rounded-xl text-sm font-bold border border-bordersoft shrink-0 ${color}">${d.name}</button>`;
-      }).join('');
-
-      // 4. Renderiza o Cardápio do dia selecionado
-      renderMenu();
-    }
-
-    function renderMenu() {
-      const area = document.getElementById('menu-render-area');
-      const meals = appState.plan[appState.selectedDay];
-      let totalP = 0, totalC = 0, totalF = 0, totalK = 0;
-
-      const html = meals.map(meal => {
-        totalP += meal.macros.p; totalC += meal.macros.c; totalF += meal.macros.f; totalK += meal.macros.kcal;
-        
-        const itemsList = meal.items.map(it => `
-          <div class="flex justify-between items-center text-sm py-1.5 border-b border-slate-100 last:border-none">
-            <span class="text-slate-700">${it.name}</span>
-            <span class="font-extrabold text-forest-900">${it.qty}${it.unit}</span>
-          </div>
-        `).join('');
-
-        return `
-          <div class="bg-white rounded-2xl border border-bordersoft p-4 shadow-sm">
-            <div class="flex justify-between items-start mb-3">
-              <div>
-                <span class="text-[11px] font-extrabold text-forest-800 bg-forest-100 px-2 py-0.5 rounded-md uppercase">${meal.label}</span>
-                <h4 class="text-base font-bold text-slate-900 mt-1">${meal.name}</h4>
-              </div>
-              <div class="text-right">
-                <div class="text-sm font-extrabold text-forest-800">${meal.macros.kcal} kcal</div>
-                <div class="text-[10px] text-slate-500 font-bold mt-1">P: ${meal.macros.p}g • C: ${meal.macros.c}g</div>
-              </div>
-            </div>
-            <div class="bg-surface rounded-xl p-3 border border-slate-100 mb-2">
-              ${itemsList}
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      area.innerHTML = html + `
-        <div class="bg-forest-50 border border-forest-200 rounded-2xl px-4 py-3 flex flex-wrap items-center justify-between text-sm font-extrabold text-forest-900 mt-4">
-           <span>TOTAIS DO DIA</span>
-           <div class="flex gap-4">
-             <span>Prot: ${totalP}g</span>
-             <span>Carb: ${totalC}g</span>
-             <span>Kcal: ${totalK}</span>
-           </div>
-        </div>
-      `;
     }
 
     function showToast(msg) {
@@ -610,21 +1906,25 @@
       document.getElementById('toast-msg').textContent = msg;
       toast.classList.remove('hidden');
       setTimeout(() => { toast.classList.remove('translate-y-2', 'opacity-0'); }, 10);
-      setTimeout(() => { 
+      setTimeout(() => {
         toast.classList.add('translate-y-2', 'opacity-0');
         setTimeout(() => toast.classList.add('hidden'), 300);
-      }, 3000);
+      }, 2800);
     }
 
-    // Inicializa ao abrir
-    window.addEventListener('DOMContentLoaded', init);
+    // Inicialização + Limpeza automática de caches antigos do Service Worker
+    window.addEventListener('DOMContentLoaded', () => {
+      setDefaultPantry();
+      readFormInputsToState();
+      generateWeeklyPlan();
+      renderAll();
 
-    // SERVICE WORKER SETUP
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./service-worker.js').catch(err => console.log(err));
-      });
-    }
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(regs => {
+          regs.forEach(reg => reg.update());
+        });
+      }
+    });
   </script>
 </body>
 </html>
