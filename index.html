@@ -249,34 +249,53 @@
               </div>
               <div>
                 <label class="block text-xs font-semibold text-slate-600 mb-1">Idade (anos) *</label>
-                <input id="input-age" type="number" min="14" max="95" placeholder="Ex: 35" value="" required oninput="onProfileInputChange()" />
+                <input id="input-age" type="number" min="14" max="95" placeholder="Ex: 42" value="" required oninput="onProfileInputChange()" />
               </div>
               <div>
                 <label class="block text-xs font-semibold text-slate-600 mb-1">Altura (cm) *</label>
-                <input id="input-height" type="number" min="130" max="225" placeholder="Ex: 175" value="" required oninput="onProfileInputChange()" />
+                <input id="input-height" type="number" min="130" max="225" placeholder="Ex: 182" value="" required oninput="onProfileInputChange()" />
               </div>
               <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Peso (kg) *</label>
-                <input id="input-weight" type="number" step="0.5" min="35" max="240" placeholder="Ex: 80" value="" required oninput="onProfileInputChange()" />
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Peso Atual (kg) *</label>
+                <input id="input-weight" type="number" step="0.5" min="35" max="240" placeholder="Ex: 106" value="" required oninput="onProfileInputChange()" />
               </div>
             </div>
           </div>
 
-          <!-- SEÇÃO 2: OBJETIVO & HORÁRIO DE TREINO -->
+          <!-- SEÇÃO 2: PLANEJADOR DE PESO META & RITMO DE PERDA DE GORDURA -->
           <div class="pt-3 border-t border-slate-100">
-            <div class="flex items-center gap-2 mb-2.5">
-              <span class="w-5 h-5 rounded-full bg-forest-100 text-forest-800 text-xs font-extrabold flex items-center justify-center">2</span>
-              <h3 class="text-xs font-bold uppercase tracking-wider text-forest-800 m-0">Objetivo &amp; Treino</h3>
+            <div class="flex items-center justify-between mb-2.5">
+              <div class="flex items-center gap-2">
+                <span class="w-5 h-5 rounded-full bg-forest-100 text-forest-800 text-xs font-extrabold flex items-center justify-center">2</span>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-forest-800 m-0">Peso Meta &amp; Ritmo (7.700 kcal/kg)</h3>
+              </div>
+              <span class="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">Projeção Real</span>
             </div>
 
             <div class="space-y-2.5">
+              <div class="grid grid-cols-2 gap-2.5">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">Peso Meta / Objetivo (kg)</label>
+                  <input id="input-goal-weight" type="number" step="0.5" min="35" max="220" placeholder="Ex: 92" value="" oninput="onProfileInputChange()" />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">Base p/ Cálculo Proteína</label>
+                  <select id="input-protein-anchor" onchange="onProfileInputChange()">
+                    <option value="goal_weight" selected>Peso Meta (Rec. sobrepeso)</option>
+                    <option value="current_weight">Peso Atual</option>
+                  </select>
+                </div>
+              </div>
+
               <div>
-                <label class="block text-xs font-semibold text-slate-600 mb-1">Objetivo Principal</label>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Objetivo &amp; Ritmo Semanal Desejado</label>
                 <select id="input-goal" onchange="onProfileInputChange()">
-                  <option value="recomp">Recomposição Corporal (Perder gordura + Ganhar massa)</option>
-                  <option value="cut">Emagrecimento Acelerado (Déficit agressivo)</option>
-                  <option value="maint">Manutenção e Performance</option>
-                  <option value="bulk">Ganho de Massa Magra (Superávit limpo)</option>
+                  <option value="cut_025">Perda de Gordura Suave: 0,25 kg/sem (-275 kcal/dia)</option>
+                  <option value="cut_050" selected>Padrão Ouro (Recomposição): 0,50 kg/sem (-550 kcal/dia)</option>
+                  <option value="cut_075">Emagrecimento Acelerado: 0,75 kg/sem (-825 kcal/dia)</option>
+                  <option value="cut_100">Emagrecimento Agressivo: 1,00 kg/sem (-1.100 kcal/dia)</option>
+                  <option value="maint">Manutenção Corporal (0 kcal déficit)</option>
+                  <option value="bulk">Ganho de Massa Limpo (+300 kcal superávit)</option>
                 </select>
               </div>
 
@@ -294,10 +313,10 @@
                 <div id="workout-time-wrapper">
                   <label class="block text-xs font-semibold text-slate-600 mb-1">Horário do Treino</label>
                   <select id="input-workout-time" onchange="onProfileInputChange()">
-                    <option value="manha">Manhã (06h–07h)</option>
-                    <option value="almoco">Almoço (12h–13h)</option>
-                    <option value="tarde" selected>Tarde (15h–16h)</option>
-                    <option value="noite">Noite (19h–20h)</option>
+                    <option value="manha">Manhã (06h00)</option>
+                    <option value="almoco">Almoço (12h00)</option>
+                    <option value="tarde" selected>Tarde (15h00)</option>
+                    <option value="noite">Noite (19h00)</option>
                   </select>
                 </div>
               </div>
@@ -305,12 +324,12 @@
               <div>
                 <div class="flex items-center justify-between text-xs mb-1">
                   <span class="font-semibold text-slate-600">Meta Proteica Diária</span>
-                  <span id="protein-slider-badge" class="font-extrabold text-forest-800 bg-forest-100 px-2 py-0.5 rounded-md">2,1 g/kg</span>
+                  <span id="protein-slider-badge" class="font-extrabold text-forest-800 bg-forest-100 px-2 py-0.5 rounded-md">2,0 g/kg</span>
                 </div>
-                <input id="input-protein-ratio" type="range" min="1.8" max="2.4" step="0.1" value="2.1" oninput="onProfileInputChange()" />
+                <input id="input-protein-ratio" type="range" min="1.6" max="2.4" step="0.1" value="2.0" oninput="onProfileInputChange()" />
                 <div class="flex justify-between text-[10px] text-slate-400 mt-0.5">
-                  <span>1,8 g/kg</span>
-                  <span>2,1 g/kg</span>
+                  <span>1,6 g/kg</span>
+                  <span>2,0 g/kg</span>
                   <span>2,4 g/kg</span>
                 </div>
               </div>
@@ -479,6 +498,50 @@
             </div>
             <div id="tmb-get-badge" class="text-xs font-semibold text-slate-600 bg-white px-3 py-1 rounded-full border border-bordersoft shadow-2xs">
               TMB (Mifflin-St Jeor): <strong>1.968 kcal</strong> &bull; Gasto Total (GET): <strong>3.050 kcal</strong>
+            </div>
+          </div>
+
+          <!-- PAINEL DE PROJEÇÃO DE PESO META & LINHA DO TEMPO (7.700 KCAL/KG) -->
+          <div id="goal-projection-card" class="card-panel">
+            <div class="bg-forest-800 text-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <span>🎯</span>
+                <span class="text-xs font-extrabold uppercase tracking-wider">Planejamento de Peso Meta &amp; Projeção de Emagrecimento (1 kg = 7.700 kcal)</span>
+              </div>
+              <span id="projection-pace-badge" class="text-[10px] font-bold bg-emerald-500/30 text-emerald-100 px-2.5 py-0.5 rounded-full border border-emerald-400/30">
+                Ritmo: -0,50 kg/semana (-550 kcal/dia)
+              </span>
+            </div>
+            <div class="p-4 space-y-3">
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+                <div class="bg-surface p-2.5 rounded-xl border border-bordersoft">
+                  <div class="text-[10px] font-bold uppercase text-slate-500">Peso Atual &rarr; Meta</div>
+                  <div id="proj-weights-text" class="text-base font-extrabold text-forest-800 mt-0.5">106,0 kg &rarr; 94,0 kg</div>
+                  <div id="proj-delta-kg-sub" class="text-[11px] font-semibold text-emerald-700">Eliminar 12,0 kg de gordura</div>
+                </div>
+                <div class="bg-surface p-2.5 rounded-xl border border-bordersoft">
+                  <div class="text-[10px] font-bold uppercase text-slate-500">Déficit Acumulado Total</div>
+                  <div id="proj-total-kcal" class="text-base font-extrabold text-slate-900 mt-0.5">92.400 kcal</div>
+                  <div id="proj-daily-deficit" class="text-[11px] text-slate-500">Déficit médio: -550 kcal/dia</div>
+                </div>
+                <div class="bg-surface p-2.5 rounded-xl border border-bordersoft">
+                  <div class="text-[10px] font-bold uppercase text-slate-500">Prazo Estimado</div>
+                  <div id="proj-weeks-text" class="text-base font-extrabold text-forest-800 mt-0.5">24 semanas</div>
+                  <div id="proj-target-date" class="text-[11px] font-semibold text-slate-600">Previsão: --/--/----</div>
+                </div>
+                <div class="bg-surface p-2.5 rounded-xl border border-bordersoft">
+                  <div class="text-[10px] font-bold uppercase text-slate-500">Marcos de Evolução</div>
+                  <div id="proj-milestones" class="text-[11px] font-bold text-slate-800 mt-0.5 leading-snug">
+                    30d: -- kg &bull; 60d: -- kg<br />90d: -- kg
+                  </div>
+                </div>
+              </div>
+
+              <!-- Aviso de Piso Metabólico de Segurança -->
+              <div id="safety-floor-alert" class="hidden rounded-xl bg-amber-50 border border-amber-300 px-3.5 py-2.5 text-xs text-amber-900 flex items-start gap-2">
+                <span class="text-base leading-none">⚠️</span>
+                <div id="safety-floor-text"></div>
+              </div>
             </div>
           </div>
 
@@ -820,9 +883,9 @@
       },
       musculo: {
         key: 'musculo', label: 'Músculo Bovino Cozido', category: 'Proteínas & Ovos', pantryGroup: 'prot',
-        tacoCode: 'TACO nº 368', refPortion: '100g cozido',
+        tacoCode: 'TACO nº 362', refPortion: '100g cozido',
         unit: 'g', role: 'protein', slots: ['lunch', 'dinner'],
-        // TACO 368 (Carne, bovina, músculo, sem gordura, cozido): 194 kcal, 31,2g P, 0,0g C, 6,7g G por 100g
+        // TACO 362 (Carne, bovina, músculo, sem gordura, cozido): 194 kcal, 31,2g P, 0,0g C, 6,7g G por 100g
         p: 0.312, c: 0.000, f: 0.067, kcal: 1.94,
         min: 80, max: 300, step: 10, rawFactor: 1.40,
         titleName: 'Músculo Bovino Cozido Desfiado'
@@ -840,8 +903,8 @@
         key: 'whey', label: 'Whey Protein Concentrado 80%', category: 'Laticínios & Suplementos', pantryGroup: 'prot',
         tacoCode: 'TBCA / Laudo Padrão', refPortion: '100g (Dose 30g = 24g P)',
         unit: 'g', role: 'protein', slots: ['breakfast', 'snack', 'pre', 'post'],
-        // Padrão 80% WPC: 100g = 400 kcal, 80,0g P, 8,3g C, 5,0g G
-        p: 0.800, c: 0.083, f: 0.050, kcal: 4.00,
+        // Padrão TBCA WPC 80%: 100g = 400 kcal, 80,0g P, 6,7g C, 5,0g G
+        p: 0.800, c: 0.067, f: 0.050, kcal: 4.00,
         min: 20, max: 60, step: 5, rawFactor: 1,
         titleName: 'Whey Protein'
       },
@@ -849,8 +912,8 @@
         key: 'leite', label: 'Leite de Vaca Desnatado', category: 'Laticínios & Suplementos', pantryGroup: 'prot',
         tacoCode: 'TACO nº 445', refPortion: '100ml UHT',
         unit: 'ml', role: 'liquid', slots: ['breakfast', 'snack', 'post'],
-        // TACO 445 (Leite, de vaca, desnatado, UHT): 100ml = 35 kcal, 3,4g P, 4,9g C, 0,1g G
-        p: 0.034, c: 0.049, f: 0.001, kcal: 0.35,
+        // TACO 445 (Leite, de vaca, desnatado, UHT): 100ml = 35 kcal, 3,6g P, 5,0g C, 0,1g G
+        p: 0.036, c: 0.050, f: 0.001, kcal: 0.35,
         min: 100, max: 300, step: 50, rawFactor: 1,
         titleName: 'Leite Desnatado'
       },
@@ -890,22 +953,22 @@
         // TBCA C0062 (Cuscuz de milho, cozido com sal): 100g = 113 kcal, 2,2g P, 25,3g C, 0,7g G
         p: 0.022, c: 0.253, f: 0.007, kcal: 1.13,
         min: 50, max: 260, step: 10, rawFactor: 0.50,
-        titleName: 'Cuscuz de Milho Cozido'
+        titleName: 'Cuscuz de Milho'
       },
       pao_integral: {
         key: 'pao_integral', label: 'Pão de Forma Integral', category: 'Grãos & Carboidratos', pantryGroup: 'carb',
-        tacoCode: 'TACO nº 48', refPortion: '100g (2 fatias = 50g)',
+        tacoCode: 'TACO nº 42', refPortion: '100g (2 fatias = 50g)',
         unit: 'g', role: 'carb', slots: ['breakfast', 'snack', 'pre', 'post'],
-        // TACO 48 (Pão, trigo, forma, integral): 100g = 253 kcal, 9,4g P, 49,9g C, 3,7g G
+        // TACO 42 (Pão, trigo, forma, integral): 100g = 253 kcal, 9,4g P, 49,9g C, 3,7g G
         p: 0.094, c: 0.499, f: 0.037, kcal: 2.53,
         min: 25, max: 125, step: 25, rawFactor: 1,
         titleName: 'Pão de Forma Integral'
       },
       aveia: {
         key: 'aveia', label: 'Aveia em Flocos Crua', category: 'Grãos & Carboidratos', pantryGroup: 'carb',
-        tacoCode: 'TACO nº 6', refPortion: '100g em flocos',
+        tacoCode: 'TACO nº 14', refPortion: '100g em flocos',
         unit: 'g', role: 'carb', slots: ['breakfast', 'snack', 'pre', 'post'],
-        // TACO 6 (Aveia, flocos, crua): 100g = 394 kcal, 13,9g P, 66,6g C, 8,5g G
+        // TACO 14 (Aveia, flocos, crua): 100g = 394 kcal, 13,9g P, 66,6g C, 8,5g G
         p: 0.139, c: 0.666, f: 0.085, kcal: 3.94,
         min: 20, max: 100, step: 5, rawFactor: 1,
         titleName: 'Aveia em Flocos'
@@ -913,20 +976,20 @@
 
       // --- FRUTAS & GORDURAS BOAS BASE (TACO 4ª Edição / TBCA) ---
       banana: {
-        key: 'banana', label: 'Banana Prata Crua', category: 'Hortifruti & Tubérculos', pantryGroup: 'fruit_fat',
-        tacoCode: 'TACO nº 182', refPortion: '100g (s/ casca)',
+        key: 'banana', label: 'Banana Nanica / Prata', category: 'Hortifruti & Tubérculos', pantryGroup: 'fruit_fat',
+        tacoCode: 'TACO nº 178', refPortion: '100g (s/ casca)',
         unit: 'g', role: 'carb', slots: ['breakfast', 'snack', 'pre', 'post'],
-        // TACO 182 (Banana, prata, crua): 100g = 98 kcal, 1,3g P, 26,0g C, 0,1g G
-        p: 0.013, c: 0.260, f: 0.001, kcal: 0.98,
+        // TACO 178 (Banana, nanica, crua): 100g = 92 kcal, 1,4g P, 23,8g C, 0,1g G
+        p: 0.014, c: 0.238, f: 0.001, kcal: 0.92,
         min: 60, max: 210, step: 15, rawFactor: 1.30,
-        titleName: 'Banana Prata'
+        titleName: 'Banana'
       },
       pasta_amendoim: {
         key: 'pasta_amendoim', label: 'Pasta de Amendoim Integral', category: 'Gorduras Boas & Sementes', pantryGroup: 'fruit_fat',
-        tacoCode: 'TACO nº 585', refPortion: '100g (Amendoim torrado s/ sal)',
+        tacoCode: 'TBCA / TACO nº 585', refPortion: '100g integral s/ açúcar',
         unit: 'g', role: 'fat', slots: ['breakfast', 'snack', 'pre', 'post'],
-        // TACO 585 (Amendoim, torrado, sem sal): 100g = 606 kcal, 27,2g P, 20,3g C, 49,6g G
-        p: 0.272, c: 0.203, f: 0.496, kcal: 6.06,
+        // TBCA Pasta de Amendoim Integral: 100g = 595 kcal, 26,0g P, 18,0g C, 49,0g G
+        p: 0.260, c: 0.180, f: 0.490, kcal: 5.95,
         min: 10, max: 35, step: 5, rawFactor: 1,
         titleName: 'Pasta de Amendoim Integral'
       },
@@ -963,9 +1026,9 @@
       },
       patinho: {
         key: 'patinho', label: 'Patinho Bovino Grelhado/Moído', category: 'Proteínas & Ovos', pantryGroup: 'prot',
-        tacoCode: 'TACO nº 372', refPortion: '100g grelhado',
+        tacoCode: 'TACO nº 368', refPortion: '100g grelhado',
         unit: 'g', role: 'protein', slots: ['lunch', 'dinner'],
-        // TACO 372 (Carne, bovina, patinho, sem gordura, grelhado): 100g = 219 kcal, 35,9g P, 0,0g C, 7,3g G
+        // TACO 368 (Carne, bovina, patinho, sem gordura, grelhado): 100g = 219 kcal, 35,9g P, 0,0g C, 7,3g G
         p: 0.359, c: 0.000, f: 0.073, kcal: 2.19,
         min: 80, max: 300, step: 10, rawFactor: 1.30,
         titleName: 'Patinho Bovino Magro Grelhado', isExtraCatalog: true
@@ -1142,13 +1205,13 @@
         titleName: 'Mexerica Poncã', isExtraCatalog: true
       },
       castanhas: {
-        key: 'castanhas', label: 'Castanha-de-Caju Torrada', category: 'Gorduras Boas & Sementes', pantryGroup: 'fruit_fat',
-        tacoCode: 'TACO nº 590', refPortion: '100g',
+        key: 'castanhas', label: 'Castanha-do-Pará / Caju', category: 'Gorduras Boas & Sementes', pantryGroup: 'fruit_fat',
+        tacoCode: 'TACO nº 591', refPortion: '100g semente seca',
         unit: 'g', role: 'fat', slots: ['snack', 'breakfast'],
-        // TACO 590 (Castanha-de-caju, torrada): 100g = 570 kcal, 18,5g P, 29,1g C, 46,3g G
-        p: 0.185, c: 0.291, f: 0.463, kcal: 5.70,
-        min: 10, max: 35, step: 5, rawFactor: 1.0,
-        titleName: 'Castanha-de-Caju', isExtraCatalog: true
+        // TACO 591 / 590: 100g = 643 kcal, 14,5g P, 15,1g C, 63,5g G
+        p: 0.145, c: 0.151, f: 0.635, kcal: 6.43,
+        min: 10, max: 30, step: 5, rawFactor: 1.0,
+        titleName: 'Castanha-do-Pará', isExtraCatalog: true
       },
       abacate: {
         key: 'abacate', label: 'Abacate Cru', category: 'Gorduras Boas & Sementes', pantryGroup: 'fruit_fat',
@@ -1191,7 +1254,7 @@
           { key: 'ovos', role: 'primary_protein', customName: 'Ovos inteiros mexidos (sem azeite)' },
           { key: 'cuscuz', role: 'primary_carb', customName: 'Cuscuz de milho cozido no vapor' }
         ],
-        dynamicTitle: (q) => `Cuscuz de 5 min (${q.cuscuz}g) com ${q.ovos} ${q.ovos === 1 ? 'Ovo Inteiro Mexido' : 'Ovos Inteiros Mexidos'}`
+        dynamicTitle: (q) => `Cuscuz de Milho (${q.cuscuz}g) com ${q.ovos} ${q.ovos === 1 ? 'Ovo Inteiro Mexido' : 'Ovos Inteiros Mexidos'}`
       },
       {
         id: 'bf_ovos_pao',
@@ -1497,10 +1560,12 @@
         age: 0,
         height: 0,
         weight: 0,
-        goal: 'recomp',
+        goalWeight: 0,
+        proteinAnchor: 'goal_weight',
+        goal: 'cut_050',
         freq: 5,
         workoutTime: 'tarde',
-        proteinRatio: 2.1,
+        proteinRatio: 2.0,
         routine: 'misto',
         lowOil: true
       },
@@ -1508,10 +1573,26 @@
       targets: {
         tmb: 1968,
         get: 3050,
-        train: { kcal: 2400, p: 223, c: 242, f: 59, delta: -650 },
-        rest: { kcal: 2110, p: 223, c: 180, f: 55 },
-        waterMin: 3.7,
-        waterMax: 4.2
+        train: { kcal: 2400, p: 212, c: 253, f: 59, delta: -550 },
+        rest: { kcal: 2110, p: 212, c: 190, f: 55 },
+        waterMin: '3.7',
+        waterMax: '4.2',
+        projection: {
+          currentWeight: 106,
+          goalWeight: 94,
+          deltaKg: 12,
+          totalKcalToBurn: 92400,
+          dailyDeficitApplied: 550,
+          weeklyRateKg: 0.50,
+          weeksEstimated: 24,
+          targetDateFormatted: '--/--/----',
+          w30: 103.9,
+          w60: 101.7,
+          w90: 99.6,
+          clampedByFloor: false,
+          safetyFloorKcal: 1400,
+          mode: 'loss'
+        }
       },
       activeTab: 'menu',
       selectedDay: 'seg',
@@ -1537,7 +1618,7 @@
     }
 
     /* ==========================================================================
-       4. MOTOR NUTRICIONAL (MIFFLIN-ST JEOR + CARB CYCLING)
+       4. MOTOR NUTRICIONAL (MIFFLIN-ST JEOR + PLANEJADOR DE PESO META 7.700 KCAL/KG)
        ========================================================================== */
     function calculateMacroTargets() {
       const p = appState.profile;
@@ -1550,28 +1631,99 @@
       const actMult = activityMap[p.freq] || 1.55;
       const get = Math.round(tmb * actMult);
 
-      let delta = -650;
-      if (p.goal === 'cut') delta = -800;
-      else if (p.goal === 'maint') delta = 0;
-      else if (p.goal === 'bulk') delta = 300;
+      // Mapeamento de déficit baseado na equivalência 1 kg de gordura = 7.700 kcal
+      const paceMap = {
+        cut_025: -275,  // 0,25 kg/sem = -1.925 kcal/sem = -275 kcal/dia
+        cut_050: -550,  // 0,50 kg/sem = -3.850 kcal/sem = -550 kcal/dia
+        cut_075: -825,  // 0,75 kg/sem = -5.775 kcal/sem = -825 kcal/dia
+        cut_100: -1100, // 1,00 kg/sem = -7.700 kcal/sem = -1.100 kcal/dia
+        maint: 0,
+        bulk: 300
+      };
 
-      const trainKcal = Math.max(1350, get + delta);
-      const protGrams = Math.round(p.weight * p.proteinRatio);
+      let requestedDelta = paceMap[p.goal] !== undefined ? paceMap[p.goal] : -550;
+      const safetyFloorKcal = p.sex === 'M' ? 1400 : 1200;
+
+      // Peso Meta efetivo (se o usuário não preencheu, sugere -8% no modo perda ou igual ao atual)
+      let effectiveGoalWeight = p.goalWeight > 30 ? p.goalWeight : (requestedDelta < 0 ? Math.round(p.weight * 0.92 * 2) / 2 : p.weight);
+
+      // Se o usuário colocou um Peso Meta maior que o atual mas escolheu corte, ou igual ao atual
+      let rawTrainKcal = get + requestedDelta;
+      let clampedByFloor = false;
+      if (rawTrainKcal < safetyFloorKcal) {
+        rawTrainKcal = safetyFloorKcal;
+        clampedByFloor = true;
+      }
+
+      const actualDailyDelta = rawTrainKcal - get; // negativo para déficit
+      const trainKcal = rawTrainKcal;
+
+      // Base de referência para proteína (Peso Meta recomendado p/ sobrepeso vs. Peso Atual)
+      const refWeightForProtein = (p.proteinAnchor === 'goal_weight' && effectiveGoalWeight > 35 && effectiveGoalWeight < p.weight)
+        ? effectiveGoalWeight
+        : p.weight;
+
+      const protGrams = Math.round(refWeightForProtein * p.proteinRatio);
       const fatFactor = p.lowOil ? 0.55 : 0.70;
-      const trainFat = Math.max(40, Math.round(p.weight * fatFactor));
-      const trainCarb = Math.max(70, Math.round((trainKcal - (protGrams * 4) - (trainFat * 9)) / 4));
+      const trainFat = Math.max(38, Math.round(refWeightForProtein * fatFactor));
+      const trainCarb = Math.max(60, Math.round((trainKcal - (protGrams * 4) - (trainFat * 9)) / 4));
 
-      const restCarb = Math.max(60, Math.round(trainCarb * 0.75));
-      const restFat = Math.max(38, Math.round(trainFat * 0.94));
-      const restKcal = Math.round((protGrams * 4) + (restCarb * 4) + (restFat * 9));
+      // Carb Cycling nos dias de descanso
+      const restCarb = Math.max(50, Math.round(trainCarb * 0.76));
+      const restFat = Math.max(36, Math.round(trainFat * 0.95));
+      const restKcal = Math.max(safetyFloorKcal, Math.round((protGrams * 4) + (restCarb * 4) + (restFat * 9)));
+
+      // Média ponderada de déficit diário na semana (considerando dias de treino vs descanso)
+      const trainDaysCount = p.freq > 0 ? Math.min(5, p.freq) : 0;
+      const restDaysCount = 7 - trainDaysCount;
+      const avgDailyIntake = Math.round(((trainKcal * trainDaysCount) + (restKcal * restDaysCount)) / 7);
+      const avgDailyDeficit = Math.max(0, get - avgDailyIntake); // positivo quando em déficit
+
+      const deltaKgToLose = Math.max(0, Number((p.weight - effectiveGoalWeight).toFixed(1)));
+      const totalKcalToBurn = Math.round(deltaKgToLose * 7700);
+
+      const realisticWeeklyLossKg = avgDailyDeficit > 0 ? Number(((avgDailyDeficit * 7) / 7700).toFixed(2)) : 0;
+      const daysNeeded = (deltaKgToLose > 0 && avgDailyDeficit > 50)
+        ? Math.ceil(totalKcalToBurn / avgDailyDeficit)
+        : 0;
+      const weeksEstimated = daysNeeded > 0 ? Number((daysNeeded / 7).toFixed(1)) : 0;
+
+      let targetDateFormatted = 'Meta atingida / Manutenção';
+      if (daysNeeded > 0) {
+        const targetDate = new Date();
+        targetDate.setDate(targetDate.getDate() + daysNeeded);
+        targetDateFormatted = targetDate.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      }
+
+      const dailyKgLoss = avgDailyDeficit / 7700;
+      const w30 = Math.max(effectiveGoalWeight, Number((p.weight - (dailyKgLoss * 30)).toFixed(1)));
+      const w60 = Math.max(effectiveGoalWeight, Number((p.weight - (dailyKgLoss * 60)).toFixed(1)));
+      const w90 = Math.max(effectiveGoalWeight, Number((p.weight - (dailyKgLoss * 90)).toFixed(1)));
 
       appState.targets = {
         tmb,
         get,
-        train: { kcal: trainKcal, p: protGrams, c: trainCarb, f: trainFat, delta },
+        train: { kcal: trainKcal, p: protGrams, c: trainCarb, f: trainFat, delta: actualDailyDelta },
         rest: { kcal: restKcal, p: protGrams, c: restCarb, f: restFat },
         waterMin: (p.weight * 0.035).toFixed(1),
-        waterMax: (p.weight * 0.040).toFixed(1)
+        waterMax: (p.weight * 0.040).toFixed(1),
+        refWeightForProtein,
+        projection: {
+          currentWeight: p.weight,
+          goalWeight: effectiveGoalWeight,
+          deltaKg: deltaKgToLose,
+          totalKcalToBurn,
+          dailyDeficitApplied: avgDailyDeficit,
+          weeklyRateKg: realisticWeeklyLossKg,
+          weeksEstimated,
+          targetDateFormatted,
+          w30,
+          w60,
+          w90,
+          clampedByFloor,
+          safetyFloorKcal,
+          mode: requestedDelta < 0 ? 'loss' : (requestedDelta > 0 ? 'bulk' : 'maint')
+        }
       };
     }
 
@@ -1580,7 +1732,19 @@
        ========================================================================== */
     function getSlotsForDay(isTrainDay) {
       const wt = appState.profile.workoutTime;
-      if (!isTrainDay || appState.profile.freq === 0) {
+      // Se Sedentário (0x/sem), oculta Pré e Pós-Treino e distribui em 5 refeições ao longo do dia
+      if (appState.profile.freq === 0) {
+        return [
+          { slotKey: 'breakfast', time: '07h30', title: 'CAFÉ DA MANHÃ', pShare: 0.20, cShare: 0.22, allowedTypes: ['breakfast'] },
+          { slotKey: 'snack',     time: '10h30', title: 'LANCHE DA MANHÃ', pShare: 0.14, cShare: 0.16, allowedTypes: ['snack'] },
+          { slotKey: 'lunch',     time: '12h45', title: 'ALMOÇO PRINCIPAL', pShare: 0.30, cShare: 0.28, allowedTypes: ['lunch'] },
+          { slotKey: 'snack',     time: '16h30', title: 'LANCHE DA TARDE', pShare: 0.14, cShare: 0.16, allowedTypes: ['snack'] },
+          { slotKey: 'dinner',    time: '20h00', title: 'JANTAR SACIANTE', pShare: 0.22, cShare: 0.18, allowedTypes: ['dinner'] }
+        ];
+      }
+
+      // Dias de descanso (Sábado e Domingo) para praticantes de musculação
+      if (!isTrainDay) {
         return [
           { slotKey: 'breakfast', time: '08h00', title: 'CAFÉ DA MANHÃ', pShare: 0.20, cShare: 0.22, allowedTypes: ['breakfast'] },
           { slotKey: 'lunch',     time: '12h30', title: 'ALMOÇO PRINCIPAL', pShare: 0.34, cShare: 0.34, allowedTypes: ['lunch'] },
@@ -1591,12 +1755,23 @@
 
       if (wt === 'manha') {
         return [
-          { slotKey: 'pre',       time: '05h45', title: 'PRÉ-TREINO MATINAL', pShare: 0.05, cShare: 0.15, allowedTypes: ['pre'] },
-          { slotKey: 'breakfast', time: '07h30', title: 'PÓS-TREINO / CAFÉ DA MANHÃ', pShare: 0.22, cShare: 0.22, allowedTypes: ['breakfast', 'post'] },
+          { slotKey: 'pre',       time: '05h30', title: 'PRÉ-TREINO MATINAL (TREINO 06h00)', pShare: 0.05, cShare: 0.15, allowedTypes: ['pre'] },
+          { slotKey: 'breakfast', time: '07h15', title: 'PÓS-TREINO / CAFÉ DA MANHÃ', pShare: 0.22, cShare: 0.22, allowedTypes: ['breakfast', 'post'] },
           { slotKey: 'snack',     time: '10h15', title: 'LANCHE DA MANHÃ (RUA)', pShare: 0.15, cShare: 0.15, allowedTypes: ['snack'] },
           { slotKey: 'lunch',     time: '12h45', title: 'ALMOÇO ESTRATÉGICO', pShare: 0.28, cShare: 0.25, allowedTypes: ['lunch'] },
           { slotKey: 'post',      time: '16h15', title: 'LANCHE DA TARDE (RUA)', pShare: 0.10, cShare: 0.10, allowedTypes: ['snack', 'post'] },
           { slotKey: 'dinner',    time: '20h00', title: 'JANTAR EM CASA', pShare: 0.20, cShare: 0.13, allowedTypes: ['dinner'] }
+        ];
+      }
+
+      if (wt === 'almoco') {
+        return [
+          { slotKey: 'breakfast', time: '07h00', title: 'CAFÉ DA MANHÃ', pShare: 0.16, cShare: 0.16, allowedTypes: ['breakfast'] },
+          { slotKey: 'pre',       time: '11h00', title: 'PRÉ-TREINO (TREINO 12h00)', pShare: 0.08, cShare: 0.16, allowedTypes: ['pre', 'snack'] },
+          { slotKey: 'lunch',     time: '13h15', title: 'PÓS-TREINO / ALMOÇO PRINCIPAL', pShare: 0.30, cShare: 0.28, allowedTypes: ['lunch'] },
+          { slotKey: 'post',      time: '16h30', title: 'LANCHE PROTEICO DA TARDE', pShare: 0.16, cShare: 0.14, allowedTypes: ['post', 'snack'] },
+          { slotKey: 'snack',     time: '18h30', title: 'LANCHE RÁPIDO DE RUA', pShare: 0.10, cShare: 0.11, allowedTypes: ['snack'] },
+          { slotKey: 'dinner',    time: '20h30', title: 'JANTAR EM CASA', pShare: 0.20, cShare: 0.15, allowedTypes: ['dinner'] }
         ];
       }
 
@@ -1605,18 +1780,18 @@
           { slotKey: 'breakfast', time: '07h00', title: 'CAFÉ DA MANHÃ', pShare: 0.16, cShare: 0.16, allowedTypes: ['breakfast'] },
           { slotKey: 'snack',     time: '10h00', title: 'LANCHE DA MANHÃ (RUA)', pShare: 0.16, cShare: 0.16, allowedTypes: ['snack'] },
           { slotKey: 'lunch',     time: '12h30', title: 'ALMOÇO ESTRATÉGICO', pShare: 0.28, cShare: 0.24, allowedTypes: ['lunch'] },
-          { slotKey: 'pre',       time: '18h00', title: 'PRÉ-TREINO', pShare: 0.06, cShare: 0.15, allowedTypes: ['pre'] },
+          { slotKey: 'pre',       time: '18h00', title: 'PRÉ-TREINO (TREINO 19h00)', pShare: 0.06, cShare: 0.15, allowedTypes: ['pre'] },
           { slotKey: 'post',      time: '20h15', title: 'PÓS-TREINO IMEDIATO', pShare: 0.14, cShare: 0.14, allowedTypes: ['post'] },
           { slotKey: 'dinner',    time: '21h15', title: 'JANTAR DE RECUPERAÇÃO', pShare: 0.20, cShare: 0.15, allowedTypes: ['dinner'] }
         ];
       }
 
-      // Padrão Tarde (15h00-16h00) ou Almoço
+      // Padrão Tarde (15h00)
       return [
         { slotKey: 'breakfast', time: '07h00', title: 'CAFÉ DA MANHÃ', pShare: 0.15, cShare: 0.15, allowedTypes: ['breakfast'] },
         { slotKey: 'snack',     time: '10h00', title: 'LANCHE DA MANHÃ (RUA)', pShare: 0.16, cShare: 0.18, allowedTypes: ['snack'] },
         { slotKey: 'lunch',     time: '12h30', title: 'ALMOÇO ESTRATÉGICO', pShare: 0.28, cShare: 0.24, allowedTypes: ['lunch'] },
-        { slotKey: 'pre',       time: '14h30', title: 'PRÉ-TREINO', pShare: 0.04, cShare: 0.13, allowedTypes: ['pre'] },
+        { slotKey: 'pre',       time: '14h15', title: 'PRÉ-TREINO (TREINO 15h00)', pShare: 0.04, cShare: 0.13, allowedTypes: ['pre'] },
         { slotKey: 'post',      time: '16h30', title: 'PÓS-TREINO', pShare: 0.15, cShare: 0.15, allowedTypes: ['post'] },
         { slotKey: 'dinner',    time: '20h00', title: 'JANTAR EM CASA', pShare: 0.22, cShare: 0.15, allowedTypes: ['dinner'] }
       ];
@@ -2196,10 +2371,12 @@
       appState.profile.age = parseFloat(document.getElementById('input-age').value) || 0;
       appState.profile.height = parseFloat(document.getElementById('input-height').value) || 0;
       appState.profile.weight = parseFloat(document.getElementById('input-weight').value) || 0;
+      appState.profile.goalWeight = parseFloat(document.getElementById('input-goal-weight')?.value) || 0;
+      appState.profile.proteinAnchor = document.getElementById('input-protein-anchor')?.value || 'goal_weight';
       appState.profile.goal = document.getElementById('input-goal').value;
       appState.profile.freq = parseInt(document.getElementById('input-freq').value, 10);
       appState.profile.workoutTime = document.getElementById('input-workout-time').value;
-      appState.profile.proteinRatio = parseFloat(document.getElementById('input-protein-ratio').value) || 2.1;
+      appState.profile.proteinRatio = parseFloat(document.getElementById('input-protein-ratio').value) || 2.0;
       appState.profile.routine = document.getElementById('input-routine').value;
       appState.profile.lowOil = document.getElementById('input-low-oil').checked;
 
@@ -2221,7 +2398,7 @@
     function handleFormSubmit(e) {
       e.preventDefault();
       onProfileInputChange();
-      showToast('✅ Cardápio semanal recalculado com sucesso!');
+      showToast('✅ Cardápio semanal e projeção de meta recalculados!');
     }
 
     function clearProfileForNewUser() {
@@ -2230,10 +2407,14 @@
       document.getElementById('input-age').value = '';
       document.getElementById('input-height').value = '';
       document.getElementById('input-weight').value = '';
-      document.getElementById('input-goal').value = 'recomp';
+      const gwInput = document.getElementById('input-goal-weight');
+      if (gwInput) gwInput.value = '';
+      const paInput = document.getElementById('input-protein-anchor');
+      if (paInput) paInput.value = 'goal_weight';
+      document.getElementById('input-goal').value = 'cut_050';
       document.getElementById('input-freq').value = '5';
       document.getElementById('input-workout-time').value = 'tarde';
-      document.getElementById('input-protein-ratio').value = 2.1;
+      document.getElementById('input-protein-ratio').value = 2.0;
       document.getElementById('input-routine').value = 'misto';
       document.getElementById('input-low-oil').checked = true;
 
@@ -2302,19 +2483,72 @@
     function renderDashboardSummary() {
       const t = appState.targets;
       const p = appState.profile;
+      const proj = t.projection;
 
-      const userLabel = p.name ? `PLANO PERSONALIZADO DE ${p.name.toUpperCase()}` : 'MOTOR NUTRICIONAL EM TEMPO REAL';
+      const userLabel = p.name ? `PLANO PERSONALIZADO DE ${p.name.toUpperCase()} (TACO 4ª ED. / TBCA)` : 'MOTOR NUTRICIONAL EM TEMPO REAL (TACO 4ª ED. / TBCA)';
       document.getElementById('engine-user-title').textContent = userLabel;
       document.getElementById('tmb-get-badge').innerHTML = `TMB (Mifflin-St Jeor): <strong>${t.tmb.toLocaleString('pt-BR')} kcal</strong> &bull; Gasto Total (GET): <strong>${t.get.toLocaleString('pt-BR')} kcal</strong>`;
 
-      const goalLabels = { recomp: 'Recomposição', cut: 'Emagrecimento', maint: 'Manutenção', bulk: 'Ganho de Massa' };
+      const goalLabels = {
+        cut_025: 'Corte Suave (-0,25 kg/sem)',
+        cut_050: 'Recomposição (-0,50 kg/sem)',
+        cut_075: 'Acelerado (-0,75 kg/sem)',
+        cut_100: 'Agressivo (-1,00 kg/sem)',
+        maint: 'Manutenção',
+        bulk: 'Ganho Limpo'
+      };
       document.getElementById('goal-chip-train').textContent = goalLabels[p.goal] || 'Recomposição';
+
+      // Renderiza card de Projeção de Peso Meta & Linha do Tempo
+      if (proj) {
+        const curStr = proj.currentWeight.toFixed(1).replace('.', ',');
+        const goalStr = proj.goalWeight.toFixed(1).replace('.', ',');
+        document.getElementById('proj-weights-text').innerHTML = `${curStr} kg &rarr; ${goalStr} kg`;
+
+        if (proj.deltaKg > 0 && proj.mode === 'loss') {
+          document.getElementById('projection-pace-badge').textContent = `Ritmo Real: -${proj.weeklyRateKg.toFixed(2).replace('.', ',')} kg/sem (-${proj.dailyDeficitApplied} kcal/dia)`;
+          document.getElementById('proj-delta-kg-sub').textContent = `Eliminar ${proj.deltaKg.toFixed(1).replace('.', ',')} kg de gordura`;
+          document.getElementById('proj-total-kcal').textContent = `${proj.totalKcalToBurn.toLocaleString('pt-BR')} kcal`;
+          document.getElementById('proj-daily-deficit').textContent = `Déficit médio: -${proj.dailyDeficitApplied} kcal/dia`;
+          document.getElementById('proj-weeks-text').textContent = `~${proj.weeksEstimated.toString().replace('.', ',')} semanas`;
+          document.getElementById('proj-target-date').textContent = `Meta prevista: ${proj.targetDateFormatted}`;
+          document.getElementById('proj-milestones').innerHTML = `30d: <strong>${proj.w30.toFixed(1).replace('.', ',')} kg</strong> &bull; 60d: <strong>${proj.w60.toFixed(1).replace('.', ',')} kg</strong><br/>90d: <strong class="text-forest-800">${proj.w90.toFixed(1).replace('.', ',')} kg</strong>`;
+        } else if (proj.mode === 'bulk') {
+          document.getElementById('projection-pace-badge').textContent = `Superávit Limpo (+300 kcal/dia)`;
+          document.getElementById('proj-delta-kg-sub').textContent = `Foco em hipertrofia limpa`;
+          document.getElementById('proj-total-kcal').textContent = `+2.100 kcal/sem`;
+          document.getElementById('proj-daily-deficit').textContent = `Superávit controlado`;
+          document.getElementById('proj-weeks-text').textContent = `Contínuo`;
+          document.getElementById('proj-target-date').textContent = `Ajuste a cada 4 semanas`;
+          document.getElementById('proj-milestones').innerHTML = `Ganho muscular estimado:<br/><strong class="text-forest-800">+0,25 a 0,4 kg/mês</strong>`;
+        } else {
+          document.getElementById('projection-pace-badge').textContent = `Estabilidade Calórica`;
+          document.getElementById('proj-delta-kg-sub').textContent = `Dica: defina um Peso Meta menor p/ projetar prazo`;
+          document.getElementById('proj-total-kcal').textContent = `0 kcal (Equilíbrio)`;
+          document.getElementById('proj-daily-deficit').textContent = `Déficit diário: ${proj.dailyDeficitApplied} kcal`;
+          document.getElementById('proj-weeks-text').textContent = `Meta Atual`;
+          document.getElementById('proj-target-date').textContent = `Peso em manutenção`;
+          document.getElementById('proj-milestones').innerHTML = `30d: <strong>${proj.w30.toFixed(1).replace('.', ',')} kg</strong> &bull; 60d: <strong>${proj.w60.toFixed(1).replace('.', ',')} kg</strong><br/>90d: <strong>${proj.w90.toFixed(1).replace('.', ',')} kg</strong>`;
+        }
+
+        const safetyAlert = document.getElementById('safety-floor-alert');
+        const safetyText = document.getElementById('safety-floor-text');
+        if (proj.clampedByFloor) {
+          safetyAlert.classList.remove('hidden');
+          safetyText.innerHTML = `<strong>Trava de Segurança Metabólica Ativada (${proj.safetyFloorKcal} kcal/dia):</strong> O ritmo selecionado exigiria calorias abaixo do mínimo seguro para ${p.sex === 'M' ? 'homens (1.400 kcal)' : 'mulheres (1.200 kcal)'}. O cardápio foi ajustado automaticamente para <strong>${proj.safetyFloorKcal} kcal</strong>, garantindo perda segura de <strong>${proj.weeklyRateKg.toFixed(2).replace('.', ',')} kg/semana</strong> sem perda muscular.`;
+        } else {
+          safetyAlert.classList.add('hidden');
+        }
+      }
 
       document.getElementById('train-kcal').textContent = t.train.kcal.toLocaleString('pt-BR');
       const deltaTxt = t.train.delta < 0 ? `${t.train.delta} kcal déficit` : (t.train.delta > 0 ? `+${t.train.delta} kcal superávit` : ' Equilíbrio');
       document.getElementById('train-delta-badge').textContent = deltaTxt;
       document.getElementById('train-p').textContent = `${t.train.p}g`;
-      document.getElementById('train-p-ratio').textContent = `${p.proteinRatio.toFixed(1).replace('.', ',')} g/kg`;
+      const anchorSub = (p.proteinAnchor === 'goal_weight' && t.refWeightForProtein < p.weight)
+        ? `${p.proteinRatio.toFixed(1).replace('.', ',')}g/kg (Meta)`
+        : `${p.proteinRatio.toFixed(1).replace('.', ',')}g/kg`;
+      document.getElementById('train-p-ratio').textContent = anchorSub;
       document.getElementById('train-c').textContent = `${t.train.c}g`;
       document.getElementById('train-f').textContent = `${t.train.f}g`;
 
@@ -2693,10 +2927,12 @@
     function buildWhatsAppText(mode) {
       const p = appState.profile;
       const t = appState.targets;
+      const proj = t.projection;
       const headerName = p.name ? ` — ${p.name}` : '';
       let lines = [
-        `🥗 *NUTRIBASIC PRO${headerName.toUpperCase()}*`,
-        `📊 *Perfil:* ${p.age} anos | ${p.height} cm | ${p.weight} kg`,
+        `🥗 *NUTRIBASIC PRO${headerName.toUpperCase()} (TACO / TBCA)*`,
+        `📊 *Perfil:* ${p.age} anos | ${p.height} cm | Peso Atual: ${p.weight} kg | Peso Meta: ${proj.goalWeight} kg`,
+        `🎯 *Projeção:* Eliminar ${proj.deltaKg.toFixed(1)} kg (-${proj.weeklyRateKg.toFixed(2)} kg/sem) • Prazo: ~${proj.weeksEstimated} sem (${proj.targetDateFormatted})`,
         `🔥 *Metas Treino:* ${t.train.kcal} kcal (${t.train.p}g P | ${t.train.c}g C | ${t.train.f}g G)`,
         `💧 *Hidratação:* ${t.waterMin} a ${t.waterMax} L/dia`,
         `----------------------------------------`
@@ -2773,6 +3009,7 @@
 
       const p = appState.profile;
       const t = appState.targets;
+      const proj = t.projection;
       const printArea = document.getElementById('printable-pdf-area');
 
       const daysTablesHtml = DAYS_CONFIG.map(d => {
@@ -2781,7 +3018,7 @@
         let totP = 0, totC = 0, totF = 0, totKcal = 0;
         const rows = dp.meals.map(m => {
           totP += m.macros.p; totC += m.macros.c; totF += m.macros.f; totKcal += m.macros.kcal;
-          const ingStr = m.items.map(i => `<strong>${i.qty}${i.unit}</strong> ${i.name}`).join(' + ');
+          const ingStr = m.items.map(i => `<strong>${i.qty}${i.unit}</strong> ${i.name} <em>(${i.tacoCode})</em>`).join(' + ');
           return `
             <tr>
               <td style="padding:5px 7px; border-bottom:1px solid #dce6e1; font-weight:bold; width:130px; color:#1b4336;">${m.time} • ${m.slotTitle}</td>
@@ -2804,7 +3041,7 @@
               <thead>
                 <tr style="background:#eef6f2; color:#1b4336;">
                   <th style="padding:4px 7px; text-align:left;">Horário</th>
-                  <th style="padding:4px 7px; text-align:left;">Refeição e Quantidades Exatas</th>
+                  <th style="padding:4px 7px; text-align:left;">Refeição e Quantidades Exatas (Base TACO / TBCA)</th>
                   <th style="padding:4px 7px; width:42px;">Prot</th>
                   <th style="padding:4px 7px; width:42px;">Carb</th>
                   <th style="padding:4px 7px; width:42px;">Gord</th>
@@ -2820,9 +3057,12 @@
       printArea.innerHTML = `
         <div style="font-family:Arial, sans-serif; color:#1e293b; padding:10px;">
           <div style="background:#1b4336; color:#fff; padding:14px 18px; border-radius:8px; margin-bottom:12px;">
-            <h1 style="margin:0; font-size:15pt;">NutriBasic PRO — Cardápio Semanal Personalizado</h1>
+            <h1 style="margin:0; font-size:15pt;">NutriBasic PRO — Cardápio Semanal &amp; Projeção de Meta (TACO / TBCA)</h1>
             <p style="margin:4px 0 0 0; font-size:9pt; color:#d6ebe1;">
-              ${p.name ? `Usuário: ${p.name} • ` : ''}Perfil: ${p.age} anos, ${p.height} cm, ${p.weight} kg • Meta Treino: ${t.train.kcal} kcal (${t.train.p}g P | ${t.train.c}g C | ${t.train.f}g G) • Hidratação: ${t.waterMin} a ${t.waterMax} L/dia
+              ${p.name ? `Usuário: ${p.name} • ` : ''}Perfil: ${p.age} anos, ${p.height} cm • Peso Atual: ${p.weight} kg &rarr; Peso Meta: ${proj.goalWeight} kg (Eliminar ${proj.deltaKg.toFixed(1)} kg em ~${proj.weeksEstimated} semanas, até ${proj.targetDateFormatted})
+            </p>
+            <p style="margin:3px 0 0 0; font-size:8.5pt; color:#a7f3d0;">
+              Meta Treino: ${t.train.kcal} kcal (${t.train.p}g P | ${t.train.c}g C | ${t.train.f}g G) • Meta Descanso: ${t.rest.kcal} kcal • Hidratação: ${t.waterMin} a ${t.waterMax} L/dia
             </p>
           </div>
           ${daysTablesHtml}
