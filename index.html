@@ -15,6 +15,9 @@
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   
+  <!-- Biblioteca html2pdf.js para geração de PDF A4 no celular e PC -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
   <!-- Google Font: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -41,6 +44,15 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     input[type="range"] { accent-color: #2b6653; }
+
+    /* Estilos exclusivos para impressão / salvamento nativo em PDF A4 */
+    @media print {
+      body { background-color: #ffffff !important; color: #000000 !important; }
+      header, aside#config-panel, #toast, #swap-modal, #whatsapp-modal, .no-print { display: none !important; }
+      #print-pdf-container { display: block !important; width: 100% !important; padding: 0 !important; margin: 0 !important; }
+      main { display: none !important; }
+      .print-page-break { page-break-inside: avoid; break-inside: avoid; }
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col">
@@ -80,6 +92,57 @@
     </div>
   </div>
 
+  <!-- Modal de Compartilhamento no WhatsApp -->
+  <div id="whatsapp-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl border border-bordersoft max-w-lg w-full max-h-[88vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="bg-emerald-800 text-white px-5 py-4 flex items-center justify-between">
+        <div>
+          <span class="text-[11px] uppercase tracking-wider text-emerald-200 font-bold block">Exportação Rápida</span>
+          <h3 class="text-base font-extrabold">📲 Compartilhar Cardápio no WhatsApp</h3>
+        </div>
+        <button type="button" onclick="closeWhatsAppModal()" class="text-emerald-100 hover:text-white bg-emerald-700 p-1.5 rounded-lg">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="p-4 space-y-3 overflow-y-auto flex-1">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">O que você deseja enviar?</label>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <button type="button" onclick="setWhatsAppScope('week')" id="wa-scope-week" class="px-3 py-2 rounded-xl text-xs font-bold border border-forest-800 bg-forest-800 text-white transition">
+              Semana Completa (7 dias)
+            </button>
+            <button type="button" onclick="setWhatsAppScope('day')" id="wa-scope-day" class="px-3 py-2 rounded-xl text-xs font-bold border border-bordersoft bg-surface text-slate-700 hover:bg-slate-100 transition">
+              Apenas Dia Selecionado
+            </button>
+            <button type="button" onclick="setWhatsAppScope('full_shop')" id="wa-scope-full_shop" class="px-3 py-2 rounded-xl text-xs font-bold border border-bordersoft bg-surface text-slate-700 hover:bg-slate-100 transition">
+              Cardápio + Compras
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Prévia da Mensagem Formatada:</label>
+          <textarea id="whatsapp-preview-text" readonly rows="10" class="w-full rounded-xl border border-bordersoft bg-surface p-3 text-xs font-mono text-slate-700 focus:outline-none"></textarea>
+        </div>
+      </div>
+
+      <div class="bg-surface px-5 py-3.5 border-t border-bordersoft flex flex-wrap items-center justify-end gap-2">
+        <button type="button" onclick="copyWhatsAppTextFromModal()" class="px-4 py-2.5 rounded-xl text-xs font-extrabold border border-forest-700 text-forest-800 bg-white hover:bg-forest-50 transition flex items-center gap-1.5">
+          <span>📋 Copiar Texto</span>
+        </button>
+        <button type="button" onclick="sendDirectWhatsApp()" class="px-4 py-2.5 rounded-xl text-xs font-extrabold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition flex items-center gap-1.5">
+          <span>📲 Enviar Direto no WhatsApp</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Container Invisível/Impressão para Geração do PDF A4 -->
+  <div id="print-pdf-container" class="hidden bg-white text-slate-900 p-6 max-w-4xl mx-auto"></div>
+
   <!-- Header -->
   <header class="bg-forest-800 text-white shadow-md sticky top-0 z-30">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
@@ -94,20 +157,22 @@
             <h1 class="text-lg sm:text-xl font-extrabold tracking-tight leading-none">NutriBasic</h1>
             <span class="text-[11px] font-semibold uppercase tracking-wider bg-forest-700 text-emerald-200 px-2 py-0.5 rounded-full border border-forest-600">PRO</span>
           </div>
-          <p class="text-xs text-emerald-100/80 mt-0.5">Gerador Inteligente de Cardápios &amp; Meal Prep</p>
+          <p class="text-xs text-emerald-100/80 mt-0.5" id="header-user-subtitle">Gerador Inteligente de Cardápios &amp; Meal Prep</p>
         </div>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex flex-wrap items-center gap-2">
         <button type="button" onclick="toggleConfigPanel()" class="lg:hidden inline-flex items-center gap-1.5 bg-forest-700 hover:bg-forest-600 text-white text-xs font-semibold px-3 py-2 rounded-xl border border-forest-600 transition">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
-          <span>Perfil &amp; Despensa</span>
+          <span>Seus Dados</span>
         </button>
-        <button type="button" onclick="randomizeMenuVariation()" class="inline-flex items-center gap-1.5 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-semibold px-3 py-2 rounded-xl border border-emerald-500 transition">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-          <span class="hidden sm:inline">Nova Variação</span>
+        <button type="button" onclick="openWhatsAppModal('week')" class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-2 rounded-xl border border-emerald-400 shadow-xs transition">
+          <span>📲 WhatsApp</span>
         </button>
-        <button type="button" onclick="resetDefaultProfile()" class="inline-flex items-center gap-1.5 bg-forest-900/70 hover:bg-forest-900 text-emerald-100 text-xs font-semibold px-3 py-2 rounded-xl border border-forest-600 transition">
-          <span>Restaurar Padrão</span>
+        <button type="button" onclick="exportMenuToPDF()" id="btn-header-pdf" class="inline-flex items-center gap-1.5 bg-white text-forest-900 hover:bg-emerald-50 text-xs font-extrabold px-3 py-2 rounded-xl border border-emerald-200 shadow-xs transition">
+          <span>📄 Gerar PDF</span>
+        </button>
+        <button type="button" onclick="clearProfileForNewUser()" class="inline-flex items-center gap-1.5 bg-forest-900/70 hover:bg-forest-900 text-emerald-100 text-xs font-semibold px-3 py-2 rounded-xl border border-forest-600 transition" title="Limpar dados para cadastrar outra pessoa">
+          <span>👤 Novo Usuário</span>
         </button>
       </div>
     </div>
@@ -117,10 +182,15 @@
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
       
       <!-- LADO ESQUERDO: PAINEL COMPLETO DE CONFIGURAÇÃO E DESPENSA -->
-      <aside id="config-panel" class="hidden lg:block lg:col-span-4 bg-white rounded-2xl border border-bordersoft shadow-sm overflow-hidden">
+      <aside id="config-panel" class="block lg:col-span-4 bg-white rounded-2xl border border-bordersoft shadow-sm overflow-hidden">
         <div class="bg-forest-800 text-white px-4 py-3.5 flex items-center justify-between">
-          <h2 class="text-sm font-bold tracking-tight">Configuração Individual</h2>
-          <button type="button" onclick="toggleConfigPanel()" class="lg:hidden text-xs bg-forest-700 px-2.5 py-1 rounded-lg">Fechar</button>
+          <div>
+            <h2 class="text-sm font-bold tracking-tight">Dados do Usuário</h2>
+            <p class="text-[11px] text-emerald-200/90">Preencha para calcular suas metas individuais</p>
+          </div>
+          <button type="button" onclick="clearProfileForNewUser()" class="text-[11px] font-semibold bg-forest-700 hover:bg-forest-600 px-2.5 py-1 rounded-lg border border-forest-600 transition">
+            Limpar Campos
+          </button>
         </div>
 
         <form id="profile-form" onsubmit="handleFormSubmit(event)" class="p-4 space-y-5">
@@ -128,7 +198,11 @@
           <div>
             <div class="flex items-center gap-2 mb-2.5">
               <span class="w-5 h-5 rounded-full bg-forest-100 text-forest-800 text-xs font-extrabold flex items-center justify-center">1</span>
-              <h3 class="text-xs font-bold uppercase tracking-wider text-forest-800">Dados Corporais</h3>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-forest-800">Identificação &amp; Dados Corporais</h3>
+            </div>
+            <div class="mb-2.5">
+              <label class="block text-xs font-medium text-slate-600 mb-1">Nome do Usuário (opcional)</label>
+              <input id="input-name" type="text" placeholder="Ex: Carlos Eduardo" oninput="onProfileInputChange()" class="w-full rounded-xl border border-bordersoft bg-surface px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-forest-700" />
             </div>
             <div class="grid grid-cols-2 gap-2.5">
               <div>
@@ -139,16 +213,16 @@
                 </select>
               </div>
               <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1">Idade (anos)</label>
-                <input id="input-age" type="number" min="14" max="90" value="42" oninput="onProfileInputChange()" class="w-full rounded-xl border border-bordersoft bg-surface px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-forest-700" />
+                <label class="block text-xs font-medium text-slate-600 mb-1">Idade (anos) *</label>
+                <input id="input-age" type="number" min="14" max="90" placeholder="Ex: 35" value="" required oninput="onProfileInputChange()" class="w-full rounded-xl border border-bordersoft bg-surface px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-forest-700" />
               </div>
               <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1">Altura (cm)</label>
-                <input id="input-height" type="number" min="130" max="220" value="182" oninput="onProfileInputChange()" class="w-full rounded-xl border border-bordersoft bg-surface px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-forest-700" />
+                <label class="block text-xs font-medium text-slate-600 mb-1">Altura (cm) *</label>
+                <input id="input-height" type="number" min="130" max="220" placeholder="Ex: 175" value="" required oninput="onProfileInputChange()" class="w-full rounded-xl border border-bordersoft bg-surface px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-forest-700" />
               </div>
               <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1">Peso (kg)</label>
-                <input id="input-weight" type="number" step="0.5" min="40" max="220" value="106" oninput="onProfileInputChange()" class="w-full rounded-xl border border-bordersoft bg-surface px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-forest-700" />
+                <label class="block text-xs font-medium text-slate-600 mb-1">Peso (kg) *</label>
+                <input id="input-weight" type="number" step="0.5" min="40" max="220" placeholder="Ex: 82" value="" required oninput="onProfileInputChange()" class="w-full rounded-xl border border-bordersoft bg-surface px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-forest-700" />
               </div>
             </div>
           </div>
@@ -241,14 +315,29 @@
           </div>
 
           <button type="submit" class="w-full bg-forest-800 hover:bg-forest-700 text-white font-bold text-sm py-3 px-4 rounded-xl shadow-md transition">
-            Atualizar Cardápio Personalizado
+            Gerar Meu Cardápio Personalizado
           </button>
         </form>
       </aside>
 
       <!-- LADO DIREITO: MOTOR NUTRICIONAL, HIDRATAÇÃO E ABAS -->
       <div class="lg:col-span-8 space-y-5">
-        
+
+        <!-- Aviso de Boas-Vindas quando Idade, Altura ou Peso ainda não foram preenchidos -->
+        <div id="empty-profile-banner" class="hidden bg-white rounded-2xl border-2 border-dashed border-forest-600 p-6 text-center shadow-sm">
+          <div class="w-12 h-12 rounded-2xl bg-forest-100 text-forest-800 flex items-center justify-center mx-auto mb-3 text-2xl">
+            📋
+          </div>
+          <h2 class="text-lg font-extrabold text-forest-900">Preencha seus Dados Corporais para Começar</h2>
+          <p class="text-xs sm:text-sm text-slate-600 max-w-md mx-auto mt-1 mb-4">
+            Informe sua <strong>Idade, Altura e Peso</strong> no painel de configuração para que o NutriBasic calcule sua Taxa Metabólica, metas de proteína e monte seus 7 dias de cardápio.
+          </p>
+          <button type="button" onclick="focusFirstProfileInput()" class="inline-flex items-center gap-2 bg-forest-800 hover:bg-forest-700 text-white text-xs font-extrabold px-5 py-3 rounded-xl shadow-md transition">
+            <span>✏️ Inserir Meus Dados Agora</span>
+          </button>
+        </div>
+
+        <div id="active-plan-workspace" class="space-y-5">
         <!-- Resumo Nutricional -->
         <section aria-label="Resumo Nutricional">
           <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5">
@@ -368,9 +457,20 @@
             <div class="flex overflow-x-auto no-scrollbar gap-1.5" id="day-selector-bar">
               <!-- Botões Seg a Dom -->
             </div>
-            <button type="button" onclick="toggleAllDaysView()" id="btn-view-all-days" class="px-3 py-1.5 rounded-xl text-xs font-bold border border-bordersoft bg-surface text-slate-700 hover:bg-slate-100 transition shrink-0">
-              ☰ Visualizar Semana Completa (7 dias)
-            </button>
+            <div class="flex flex-wrap items-center gap-1.5">
+              <button type="button" onclick="randomizeMenuVariation()" class="px-3 py-1.5 rounded-xl text-xs font-bold border border-emerald-200 bg-emerald-50 text-emerald-900 hover:bg-emerald-100 transition shrink-0">
+                🔄 Variar Pratos
+              </button>
+              <button type="button" onclick="openWhatsAppModal('day')" class="px-3 py-1.5 rounded-xl text-xs font-bold border border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-500 transition shrink-0">
+                📲 WhatsApp
+              </button>
+              <button type="button" onclick="exportMenuToPDF()" class="px-3 py-1.5 rounded-xl text-xs font-bold border border-forest-800 bg-forest-800 text-white hover:bg-forest-700 transition shrink-0">
+                📄 Baixar PDF
+              </button>
+              <button type="button" onclick="toggleAllDaysView()" id="btn-view-all-days" class="px-3 py-1.5 rounded-xl text-xs font-bold border border-bordersoft bg-surface text-slate-700 hover:bg-slate-100 transition shrink-0">
+                ☰ Semana Completa (7d)
+              </button>
+            </div>
           </div>
 
           <div id="menu-render-area" class="space-y-5">
@@ -432,6 +532,7 @@
             </div>
           </div>
         </div>
+        </div><!-- /#active-plan-workspace -->
 
       </div>
     </div>
@@ -903,10 +1004,11 @@
        3. ESTADO GLOBAL DA APLICAÇÃO
        ========================================================================== */
     let appState = {
+      userName: '',
       sex: 'M',
-      age: 42,
-      height: 182,
-      weight: 106,
+      age: null,
+      height: null,
+      weight: null,
       goal: 'recomp',        // 'cut', 'recomp', 'bulk'
       freq: 5,               // 0, 3, 5, 6
       workoutTime: 'tarde',  // 'manha', 'almoco', 'tarde', 'noite'
@@ -921,8 +1023,17 @@
       activeTab: 'cardapio',
       waterBottles: 0,
       checkedShopping: {},
-      weeklyPlan: {}
+      weeklyPlan: {},
+      whatsAppScope: 'week'
     };
+
+    function hasValidProfile() {
+      return (
+        appState.age >= 12 &&
+        appState.height >= 100 &&
+        appState.weight >= 30
+      );
+    }
 
     function setDefaultPantry() {
       PANTRY_ORDER.forEach(k => { appState.pantry[k] = true; });
@@ -1320,16 +1431,32 @@
     }
 
     function readFormInputsToState() {
+      const nameInput = document.getElementById('input-name');
+      appState.userName = nameInput ? nameInput.value.trim() : '';
       appState.sex = document.getElementById('input-sex').value;
-      appState.age = parseFloat(document.getElementById('input-age').value) || 35;
-      appState.height = parseFloat(document.getElementById('input-height').value) || 170;
-      appState.weight = parseFloat(document.getElementById('input-weight').value) || 75;
+
+      const rawAge = parseFloat(document.getElementById('input-age').value);
+      const rawHeight = parseFloat(document.getElementById('input-height').value);
+      const rawWeight = parseFloat(document.getElementById('input-weight').value);
+
+      appState.age = !isNaN(rawAge) ? rawAge : null;
+      appState.height = !isNaN(rawHeight) ? rawHeight : null;
+      appState.weight = !isNaN(rawWeight) ? rawWeight : null;
+
       appState.goal = document.getElementById('input-goal').value;
       appState.freq = parseInt(document.getElementById('input-freq').value, 10);
       appState.workoutTime = document.getElementById('input-workout-time').value;
       appState.proteinRatio = parseFloat(document.getElementById('input-protein-ratio').value) || 2.0;
       appState.routine = document.getElementById('input-routine').value;
       appState.lowOil = document.getElementById('input-low-oil').checked;
+
+      // Atualiza subtítulo com o nome do usuário se preenchido
+      const subtitleEl = document.getElementById('header-user-subtitle');
+      if (subtitleEl) {
+        subtitleEl.textContent = appState.userName
+          ? `Plano Individual: ${appState.userName}`
+          : 'Gerador Inteligente de Cardápios & Meal Prep';
+      }
 
       // Oculta seletor de horário de treino se for Sedentário (0x)
       const wtWrapper = document.getElementById('workout-time-wrapper');
@@ -1344,18 +1471,33 @@
 
     function onProfileInputChange() {
       readFormInputsToState();
-      generateWeeklyPlan();
+      if (hasValidProfile()) {
+        generateWeeklyPlan();
+      }
       renderAll();
     }
 
     function handleFormSubmit(e) {
       e.preventDefault();
-      onProfileInputChange();
-      showToast('Cardápio individual recalculado com sucesso!');
-      if (window.innerWidth < 1024) toggleConfigPanel();
+      readFormInputsToState();
+      if (!hasValidProfile()) {
+        showToast('Preencha Idade, Altura e Peso válidos para gerar seu cardápio!');
+        focusFirstProfileInput();
+        return;
+      }
+      generateWeeklyPlan();
+      renderAll();
+      showToast('Cardápio individual gerado com sucesso!');
+      if (window.innerWidth < 1024) {
+        document.getElementById('config-panel').classList.add('hidden');
+      }
     }
 
     function randomizeMenuVariation() {
+      if (!hasValidProfile()) {
+        showToast('Insira seus dados primeiro para gerar variações!');
+        return;
+      }
       appState.variationSeed += 1;
       appState.customOverrides = {};
       generateWeeklyPlan();
@@ -1363,23 +1505,41 @@
       showToast('Nova variação semanal gerada para o seu perfil!');
     }
 
-    function resetDefaultProfile() {
+    function clearProfileForNewUser() {
+      const nameInput = document.getElementById('input-name');
+      if (nameInput) nameInput.value = '';
       document.getElementById('input-sex').value = 'M';
-      document.getElementById('input-age').value = 42;
-      document.getElementById('input-height').value = 182;
-      document.getElementById('input-weight').value = 106;
+      document.getElementById('input-age').value = '';
+      document.getElementById('input-height').value = '';
+      document.getElementById('input-weight').value = '';
       document.getElementById('input-goal').value = 'recomp';
       document.getElementById('input-freq').value = '5';
       document.getElementById('input-workout-time').value = 'tarde';
-      document.getElementById('input-protein-ratio').value = 2.1;
+      document.getElementById('input-protein-ratio').value = 2.0;
       document.getElementById('input-routine').value = 'misto';
       document.getElementById('input-low-oil').checked = true;
 
       setDefaultPantry();
       appState.customOverrides = {};
       appState.variationSeed = 0;
+      appState.waterBottles = 0;
+      appState.checkedShopping = {};
+      appState.weeklyPlan = {};
+
+      document.getElementById('config-panel').classList.remove('hidden');
       onProfileInputChange();
-      showToast('Perfil original restaurado!');
+      focusFirstProfileInput();
+      showToast('Campos limpos! Insira os dados do novo usuário.');
+    }
+
+    function focusFirstProfileInput() {
+      document.getElementById('config-panel').classList.remove('hidden');
+      const ageEl = document.getElementById('input-age');
+      const heightEl = document.getElementById('input-height');
+      const weightEl = document.getElementById('input-weight');
+      if (!ageEl.value) { ageEl.focus(); return; }
+      if (!heightEl.value) { heightEl.focus(); return; }
+      weightEl.focus();
     }
 
     // Modal de Troca de Refeição
@@ -1484,9 +1644,22 @@
        8. RENDERIZAÇÃO COMPLETA DA INTERFACE
        ========================================================================== */
     function renderAll() {
+      renderPantryChips();
+
+      const emptyBanner = document.getElementById('empty-profile-banner');
+      const workspace = document.getElementById('active-plan-workspace');
+
+      if (!hasValidProfile()) {
+        if (emptyBanner) emptyBanner.classList.remove('hidden');
+        if (workspace) workspace.classList.add('hidden');
+        return;
+      }
+
+      if (emptyBanner) emptyBanner.classList.add('hidden');
+      if (workspace) workspace.classList.remove('hidden');
+
       renderTopDashboard();
       renderHydrationTracker();
-      renderPantryChips();
       renderDaySelectorBar();
       renderWeeklyMenuArea();
       renderMealPrepArea();
@@ -1868,6 +2041,235 @@
       showToast('Lista de compras copiada para o WhatsApp!');
     }
 
+    /* ==========================================================================
+       10. EXPORTAÇÃO DO CARDÁPIO PARA WHATSAPP E PDF (A4)
+       ========================================================================== */
+    function buildWhatsAppMenuText(scope) {
+      if (!hasValidProfile()) return 'Preencha seus dados no NutriBasic PRO para gerar o cardápio.';
+
+      const t = calculateNutritionTargets();
+      const userHeader = appState.userName ? `👤 *Usuário:* ${appState.userName}\n` : '';
+      const sexLabel = appState.sex === 'M' ? 'Homem' : 'Mulher';
+      const goalLabels = { cut: 'Emagrecimento', recomp: 'Recomposição Corporal', bulk: 'Hipertrofia Limpa' };
+      const minL = (appState.weight * 0.035).toFixed(1).replace('.', ',');
+      const maxL = (appState.weight * 0.040).toFixed(1).replace('.', ',');
+
+      const lines = [
+        `*🥗 PLANO ALIMENTAR INDIVIDUAL — NUTRIBASIC PRO*`,
+        `${userHeader}📊 *Perfil:* ${sexLabel}, ${appState.age} anos, ${appState.height} cm, ${appState.weight} kg`,
+        `🎯 *Objetivo:* ${goalLabels[appState.goal]}`,
+        `🔥 *Meta Dias de Treino:* ${t.train.kcal} kcal (${t.train.p}g P | ${t.train.c}g C | ${t.train.f}g G)`,
+        `🧘 *Meta Dias de Descanso:* ${t.rest.kcal} kcal (${t.rest.p}g P | ${t.rest.c}g C | ${t.rest.f}g G)`,
+        `💧 *Hidratação Diária:* ${minL} a ${maxL} L de água`,
+        `----------------------------------------`
+      ];
+
+      const daysToExport = scope === 'day'
+        ? [appState.selectedDay]
+        : DAYS_CONFIG.map(d => d.id);
+
+      daysToExport.forEach(dayId => {
+        const dayPlan = appState.weeklyPlan[dayId];
+        if (!dayPlan) return;
+        let sumP = 0, sumC = 0, sumF = 0, sumKcal = 0;
+        dayPlan.meals.forEach(m => {
+          sumP += m.macros.p; sumC += m.macros.c; sumF += m.macros.f; sumKcal += m.macros.kcal;
+        });
+
+        lines.push(`\n📅 *${dayPlan.dayName.toUpperCase()}* (${dayPlan.isWorkout ? 'Dia de Treino' : 'Descanso'})`);
+        lines.push(`_Total do Dia: ${sumKcal} kcal | ${sumP}g Prot | ${sumC}g Carb | ${sumF}g Gord_`);
+
+        dayPlan.meals.forEach(meal => {
+          const itemsStr = meal.items.map(it => `${it.qty}${it.unit} ${it.name}`).join(' + ');
+          lines.push(`• *${meal.time} (${meal.slotTitle}):* ${meal.title}`);
+          lines.push(`  ↳ ${itemsStr} _(${meal.macros.kcal} kcal | ${meal.macros.p}g P)_`);
+        });
+      });
+
+      if (scope === 'full_shop') {
+        lines.push(`\n----------------------------------------`);
+        lines.push(`*🛒 LISTA DE COMPRAS DA SEMANA (PESO BRUTO)*`);
+        const totals = aggregateWeeklyIngredients();
+        Object.values(totals).forEach(entry => {
+          const rawQty = Math.ceil(entry.cookedTotal * entry.ing.rawFactor);
+          let displayQty = `${rawQty}${entry.ing.unit}`;
+          if (entry.ing.unit === 'g' && rawQty >= 1000) displayQty = `${(rawQty / 1000).toFixed(2).replace('.', ',')} kg`;
+          if (entry.ing.unit === 'ml' && rawQty >= 1000) displayQty = `${(rawQty / 1000).toFixed(1).replace('.', ',')} L`;
+          lines.push(`- ${entry.ing.label}: *${displayQty}*`);
+        });
+      }
+
+      return lines.join('\n');
+    }
+
+    function openWhatsAppModal(defaultScope = 'week') {
+      if (!hasValidProfile()) {
+        showToast('Insira sua Idade, Altura e Peso antes de exportar para o WhatsApp!');
+        focusFirstProfileInput();
+        return;
+      }
+      setWhatsAppScope(defaultScope);
+      document.getElementById('whatsapp-modal').classList.remove('hidden');
+    }
+
+    function closeWhatsAppModal() {
+      document.getElementById('whatsapp-modal').classList.add('hidden');
+    }
+
+    function setWhatsAppScope(scope) {
+      appState.whatsAppScope = scope;
+      ['week', 'day', 'full_shop'].forEach(s => {
+        const btn = document.getElementById(`wa-scope-${s}`);
+        if (!btn) return;
+        if (s === scope) {
+          btn.className = 'px-3 py-2 rounded-xl text-xs font-bold border border-forest-800 bg-forest-800 text-white transition';
+        } else {
+          btn.className = 'px-3 py-2 rounded-xl text-xs font-bold border border-bordersoft bg-surface text-slate-700 hover:bg-slate-100 transition';
+        }
+      });
+      document.getElementById('whatsapp-preview-text').value = buildWhatsAppMenuText(scope);
+    }
+
+    function copyWhatsAppTextFromModal() {
+      const textarea = document.getElementById('whatsapp-preview-text');
+      textarea.select();
+      document.execCommand('copy');
+      showToast('Cardápio copiado! Cole no seu WhatsApp.');
+    }
+
+    function sendDirectWhatsApp() {
+      const text = document.getElementById('whatsapp-preview-text').value;
+      const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+      window.open(url, '_blank');
+    }
+
+    function buildPrintablePDFHtml() {
+      const t = calculateNutritionTargets();
+      const sexLabel = appState.sex === 'M' ? 'Masculino' : 'Feminino';
+      const goalLabels = { cut: 'Emagrecimento Acelerado', recomp: 'Recomposição Corporal', bulk: 'Hipertrofia Limpa' };
+      const minL = (appState.weight * 0.035).toFixed(1).replace('.', ',');
+      const maxL = (appState.weight * 0.040).toFixed(1).replace('.', ',');
+      const titleName = appState.userName ? ` — ${appState.userName}` : '';
+
+      const daysHtml = DAYS_CONFIG.map(d => {
+        const dayPlan = appState.weeklyPlan[d.id];
+        if (!dayPlan) return '';
+        let sumP = 0, sumC = 0, sumF = 0, sumKcal = 0;
+        dayPlan.meals.forEach(m => {
+          sumP += m.macros.p; sumC += m.macros.c; sumF += m.macros.f; sumKcal += m.macros.kcal;
+        });
+
+        const rows = dayPlan.meals.map(m => {
+          const ingList = m.items.map(it => `${it.qty}${it.unit} ${it.name}`).join(' + ');
+          return `
+            <tr style="border-bottom: 1px solid #e2e8f0;">
+              <td style="padding: 6px 8px; font-weight: 700; color: #1b4336; width: 130px; font-size: 11px;">${m.time} • ${m.slotTitle}</td>
+              <td style="padding: 6px 8px; font-size: 11px;">
+                <div style="font-weight: 700; color: #0f172a;">${m.title}</div>
+                <div style="color: #475569; font-size: 10px;">${ingList}</div>
+              </td>
+              <td style="padding: 6px 6px; text-align: center; font-size: 11px; font-weight: 600;">${m.macros.p}g</td>
+              <td style="padding: 6px 6px; text-align: center; font-size: 11px;">${m.macros.c}g</td>
+              <td style="padding: 6px 6px; text-align: center; font-size: 11px;">${m.macros.f}g</td>
+              <td style="padding: 6px 8px; text-align: center; font-size: 11px; font-weight: 800; color: #1b4336;">${m.macros.kcal}</td>
+            </tr>
+          `;
+        }).join('');
+
+        return `
+          <div class="print-page-break" style="margin-bottom: 14px; border: 1px solid #cbd5e1; border-radius: 8px; overflow: hidden;">
+            <div style="background-color: ${dayPlan.isWorkout ? '#1b4336' : '#3d5a6c'}; color: #ffffff; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 800;">
+              <span>${dayPlan.dayName.toUpperCase()} (${dayPlan.isWorkout ? 'DIA DE TREINO' : 'DESCANSO'})</span>
+              <span>Total: ${sumKcal} kcal | ${sumP}g P • ${sumC}g C • ${sumF}g G</span>
+            </div>
+            <table style="width: 100%; border-collapse: collapse; background: #ffffff;">
+              <thead>
+                <tr style="background-color: #f1f5f9; border-bottom: 1px solid #cbd5e1; font-size: 10px; text-transform: uppercase; color: #334155;">
+                  <th style="padding: 5px 8px; text-align: left;">Horário</th>
+                  <th style="padding: 5px 8px; text-align: left;">Refeição & Quantidades Prontas</th>
+                  <th style="padding: 5px 6px; text-align: center;">Prot</th>
+                  <th style="padding: 5px 6px; text-align: center;">Carb</th>
+                  <th style="padding: 5px 6px; text-align: center;">Gord</th>
+                  <th style="padding: 5px 8px; text-align: center;">Kcal</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div style="font-family: Inter, Arial, sans-serif; color: #1e293b;">
+          <div style="background-color: #1b4336; color: #ffffff; padding: 16px 20px; border-radius: 10px; margin-bottom: 14px;">
+            <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #a7f3d0; font-weight: 700;">NutriBasic PRO • Planejamento Alimentar Individualizado</div>
+            <h1 style="font-size: 20px; font-weight: 800; margin: 4px 0;">Cardápio Semanal Completo${titleName}</h1>
+            <div style="font-size: 11px; color: #e2e8f0;">
+              Perfil: ${sexLabel}, ${appState.age} anos, ${appState.height} cm, ${appState.weight} kg • Objetivo: ${goalLabels[appState.goal]} • TMB: ${t.bmr} kcal | GET: ${t.tdee} kcal
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 10px; margin-bottom: 14px; font-size: 11px;">
+            <div style="flex: 1; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; background: #f8fafc;">
+              <strong style="color: #1b4336; display: block; margin-bottom: 2px;">DIAS DE TREINO</strong>
+              <span style="font-size: 15px; font-weight: 800;">${t.train.kcal} kcal/dia</span>
+              <div>Proteína: <strong>${t.train.p}g</strong> | Carb: <strong>${t.train.c}g</strong> | Gord: <strong>${t.train.f}g</strong></div>
+            </div>
+            <div style="flex: 1; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; background: #f8fafc;">
+              <strong style="color: #3d5a6c; display: block; margin-bottom: 2px;">DIAS DE DESCANSO</strong>
+              <span style="font-size: 15px; font-weight: 800;">${t.rest.kcal} kcal/dia</span>
+              <div>Proteína: <strong>${t.rest.p}g</strong> | Carb: <strong>${t.rest.c}g</strong> | Gord: <strong>${t.rest.f}g</strong></div>
+            </div>
+            <div style="flex: 1; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px; background: #f8fafc;">
+              <strong style="color: #1b4336; display: block; margin-bottom: 2px;">HIDRATAÇÃO & PREPARO</strong>
+              <span style="font-size: 15px; font-weight: 800;">${minL} a ${maxL} L / dia</span>
+              <div>Pesos em alimento pronto (cozido/grelhado).</div>
+            </div>
+          </div>
+
+          ${daysHtml}
+        </div>
+      `;
+    }
+
+    function exportMenuToPDF() {
+      if (!hasValidProfile()) {
+        showToast('Insira sua Idade, Altura e Peso antes de gerar o PDF!');
+        focusFirstProfileInput();
+        return;
+      }
+
+      const printContainer = document.getElementById('print-pdf-container');
+      printContainer.innerHTML = buildPrintablePDFHtml();
+      printContainer.classList.remove('hidden');
+
+      const safeUserName = appState.userName
+        ? appState.userName.toLowerCase().replace(/[^a-z0-9]/gi, '_')
+        : `${appState.weight}kg`;
+      const fileName = `cardapio_nutribasic_${safeUserName}.pdf`;
+
+      if (typeof window.html2pdf !== 'undefined') {
+        showToast('Gerando seu PDF A4... Aguarde alguns segundos.');
+        const opt = {
+          margin: [8, 8, 8, 8],
+          filename: fileName,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        window.html2pdf().set(opt).from(printContainer).save().then(() => {
+          printContainer.classList.add('hidden');
+          showToast('PDF baixado com sucesso!');
+        }).catch(() => {
+          window.print();
+          printContainer.classList.add('hidden');
+        });
+      } else {
+        window.print();
+        printContainer.classList.add('hidden');
+      }
+    }
+
     function renderStreetGuideArea() {
       const t = calculateNutritionTargets();
       const lunchProt = Math.round(t.train.p * 0.27);
@@ -1916,7 +2318,9 @@
     window.addEventListener('DOMContentLoaded', () => {
       setDefaultPantry();
       readFormInputsToState();
-      generateWeeklyPlan();
+      if (hasValidProfile()) {
+        generateWeeklyPlan();
+      }
       renderAll();
 
       if ('serviceWorker' in navigator) {
