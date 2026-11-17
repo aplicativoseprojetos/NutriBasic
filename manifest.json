@@ -1,0 +1,15 @@
+{
+  "name": "NutriBasic - Cardápios e Meal Prep",
+  "short_name": "NutriBasic",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f6f8f7",
+  "theme_color": "#1b4336",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2934/2934069.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
