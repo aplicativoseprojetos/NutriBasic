@@ -108,37 +108,149 @@
   </div>
 
   <script>
-    // Função para interagir com o botão Recalcular
-    function recalcularMetas() {
-      const peso = parseFloat(document.getElementById('inputPeso').value) || 106;
-      const objetivo = document.getElementById('inputObjetivo').value;
+    // ----- ESTADO GLOBAL E METAS -----
+    const state = {
+        peso: 106,
+        objetivo: 'perder',
+        treino_horario: '15h',
+        treino_dias: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex'],
+        proteina_kg: 2.1
+    };
 
-      // Cálculos básicos baseados no seu peso e perfil
-      let prot = Math.round(peso * 2.1);
-      let kcal = objetivo === 'perder' ? Math.round(peso * 22) : Math.round(peso * 26);
-      let gord = Math.round(peso * 0.55);
-      let carb = Math.round((kcal - (prot * 4) - (gord * 9)) / 4);
+    function calcularMetas() {
+        // Cálculo base de macronutrientes (Dias de Treino)
+        const prot = Math.round(state.peso * state.proteina_kg);
+        const kcal = state.objetivo === 'perder' ? Math.round(state.peso * 22) : Math.round(state.peso * 26);
+        const gord = Math.round(state.peso * 0.55);
+        const carb = Math.round((kcal - (prot * 4) - (gord * 9)) / 4);
 
-      // Atualiza a tela
-      document.getElementById('visorKcal').innerText = kcal;
-      document.getElementById('visorProt').innerText = prot + 'g';
-      document.getElementById('visorCarb').innerText = carb + 'g';
-      document.getElementById('visorGord').innerText = gord + 'g';
-
-      alert("✅ Metas atualizadas com sucesso!");
+        // Atualiza UI
+        document.getElementById('meta-kcal').textContent = kcal.toLocaleString('pt-BR');
+        document.getElementById('meta-prot').textContent = prot + 'g';
+        document.getElementById('meta-prot-kg').textContent = state.proteina_kg.toFixed(2) + ' g/kg';
+        document.getElementById('meta-carb').textContent = carb + 'g';
+        document.getElementById('meta-gord').textContent = gord + 'g';
+        
+        // Atualiza a meta de hidratação (35ml a 40ml por kg)
+        const aguaMin = (state.peso * 0.035).toFixed(1);
+        const aguaMax = (state.peso * 0.040).toFixed(1);
+        document.getElementById('meta-agua').textContent = `${aguaMin} a ${aguaMax} L`;
     }
 
-    // Função para o botão de Trocar Refeição
-    function trocarRefeicao(nomeRefeicao) {
-      alert("Abrindo lista de substituições para o " + nomeRefeicao + "...\n(Em breve você poderá selecionar opções de mesma caloria aqui!)");
+    // ----- TRACKER DE HIDRATAÇÃO -----
+    let garrafasConsumidas = 0;
+    const maxGarrafas = 8; // 8 garrafas de 500ml = 4L
+    const waterTrackerHtml = Array(maxGarrafas).fill('<button class="water-btn" onclick="toggleWater(this)"></button>').join('');
+    document.getElementById('water-tracker').innerHTML = waterTrackerHtml;
+
+    window.toggleWater = function(btn) {
+        if (btn.classList.contains('active')) {
+            btn.classList.remove('active');
+            garrafasConsumidas--;
+        } else {
+            btn.classList.add('active');
+            garrafasConsumidas++;
+        }
+        atualizarTextoAgua();
+    };
+
+    window.zerarAgua = function() {
+        garrafasConsumidas = 0;
+        document.querySelectorAll('.water-btn').forEach(btn => btn.classList.remove('active'));
+        atualizarTextoAgua();
+    };
+
+    function atualizarTextoAgua() {
+        const litros = (garrafasConsumidas * 0.5).toFixed(1);
+        document.getElementById('water-status').textContent = `Registrado hoje: ${litros} L (${garrafasConsumidas}/${maxGarrafas} garrafas 500ml)`;
     }
 
-    // Registra o Service Worker do PWA
+    // ----- NAVEGAÇÃO DE TABS -----
+    window.openTab = function(evt, tabName) {
+        let i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("tab-content");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].classList.remove("active");
+        }
+        tablinks = document.getElementsByClassName("tab-btn");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].classList.remove("active");
+        }
+        document.getElementById(tabName).classList.add("active");
+        evt.currentTarget.classList.add("active");
+    };
+
+    // ----- MOCK DO CARDÁPIO -----
+    // Popula o cardápio da segunda-feira como exemplo inicial
+    const segundaFeiraHtml = `
+      <div class="day-card p-4">
+          <div class="flex justify-between items-center mb-3">
+              <h3 class="font-bold text-gray-800">SEGUNDA-FEIRA</h3>
+              <span class="bg-nutri-dark text-white text-xs px-2 py-1 rounded">Dia de Treino</span>
+          </div>
+          <div class="border-t border-gray-200 pt-3">
+              <div class="mb-4">
+                  <div class="flex justify-between">
+                      <strong class="text-nutri-dark text-sm">07h00 • Café da Manhã</strong>
+                      <span class="text-xs text-gray-500 font-bold">417 kcal</span>
+                  </div>
+                  <p class="text-sm text-gray-600 mt-1">4 ovos inteiros mexidos (sem azeite) + 120g cuscuz de milho + café preto sem açúcar.</p>
+                  <button class="text-xs text-blue-600 mt-1" onclick="alert('Funcionalidade de troca em breve!')">🔄 Trocar Refeição</button>
+              </div>
+               <div class="mb-4">
+                  <div class="flex justify-between">
+                      <strong class="text-nutri-dark text-sm">10h00 • Lanche (Rua)</strong>
+                      <span class="text-xs text-gray-500 font-bold">394 kcal</span>
+                  </div>
+                  <p class="text-sm text-gray-600 mt-1">1 pote Overnight Oats (50g aveia + 30g Whey + 150ml leite) + 80g morangos.</p>
+                  <button class="text-xs text-blue-600 mt-1" onclick="alert('Funcionalidade de troca em breve!')">🔄 Trocar Refeição</button>
+              </div>
+              <div class="mb-4">
+                  <div class="flex justify-between">
+                      <strong class="text-nutri-dark text-sm">12h30 • Almoço (Buffet)</strong>
+                      <span class="text-xs text-gray-500 font-bold">546 kcal</span>
+                  </div>
+                  <p class="text-sm text-gray-600 mt-1">180g peito de frango + 150g arroz + 100g feijão + salada sem azeite.</p>
+                  <button class="text-xs text-blue-600 mt-1" onclick="alert('Funcionalidade de troca em breve!')">🔄 Trocar Refeição</button>
+              </div>
+              <div class="mb-4 bg-gray-100 p-2 rounded border border-gray-200">
+                  <div class="flex justify-between">
+                      <strong class="text-nutri-dark text-sm">14h30 • Pré-Treino</strong>
+                      <span class="text-xs text-gray-500 font-bold">216 kcal</span>
+                  </div>
+                  <p class="text-sm text-gray-600 mt-1">1 banana grande (110g) + 15g pasta de amendoim integral.</p>
+              </div>
+              <div class="mb-4 bg-gray-100 p-2 rounded border border-gray-200">
+                  <div class="flex justify-between">
+                      <strong class="text-nutri-dark text-sm">16h30 • Pós-Treino</strong>
+                      <span class="text-xs text-gray-500 font-bold">294 kcal</span>
+                  </div>
+                  <p class="text-sm text-gray-600 mt-1">30g Whey Protein + 250ml leite desnatado gelado + 1 banana média (85g).</p>
+              </div>
+              <div class="mb-2">
+                  <div class="flex justify-between">
+                      <strong class="text-nutri-dark text-sm">20h00 • Jantar (Casa)</strong>
+                      <span class="text-xs text-gray-500 font-bold">484 kcal</span>
+                  </div>
+                  <p class="text-sm text-gray-600 mt-1">180g músculo bovino cozido + 120g arroz + legumes no vapor + 1 fio de azeite.</p>
+                  <button class="text-xs text-blue-600 mt-1" onclick="alert('Funcionalidade de troca em breve!')">🔄 Trocar Refeição</button>
+              </div>
+          </div>
+      </div>
+    `;
+    document.getElementById('cardapio-dias').innerHTML = segundaFeiraHtml;
+
+    // ----- SERVICE WORKER -----
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./service-worker.js');
+        navigator.serviceWorker.register('./service-worker.js')
+          .then(reg => console.log('Service Worker registrado com sucesso!'))
+          .catch(err => console.log('Erro no Service Worker:', err));
       });
     }
+
+    // Initialize
+    calcularMetas();
   </script>
 </body>
 </html>
