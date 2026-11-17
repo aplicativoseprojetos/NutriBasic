@@ -2485,7 +2485,7 @@
       const p = appState.profile;
       const proj = t.projection;
 
-      const userLabel = p.name ? `PLANO PERSONALIZADO DE ${p.name.toUpperCase()} (TACO 4ª ED. / TBCA)` : 'MOTOR NUTRICIONAL EM TEMPO REAL (TACO 4ª ED. / TBCA)';
+      const userLabel = p.name ? `PLANO PERSONALIZADO DE ${p.name.toUpperCase()};
       document.getElementById('engine-user-title').textContent = userLabel;
       document.getElementById('tmb-get-badge').innerHTML = `TMB (Mifflin-St Jeor): <strong>${t.tmb.toLocaleString('pt-BR')} kcal</strong> &bull; Gasto Total (GET): <strong>${t.get.toLocaleString('pt-BR')} kcal</strong>`;
 
