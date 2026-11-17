@@ -40,7 +40,9 @@
     }
   </script>
 
-  <!-- Biblioteca html2pdf para exportação direta em PDF A4 -->
+  <!-- Biblioteca jsPDF Oficial (Motor Vetorial Multipáginas Nativo — 100% imune a cortes no celular) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <!-- Fallback html2pdf -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
   <!-- CSS Nativo Completo (Garante visual perfeito mesmo offline ou se a CDN falhar) -->
@@ -156,11 +158,32 @@
     ::-webkit-scrollbar-track { background: #eef4f1; }
     ::-webkit-scrollbar-thumb { background: #9bb5ab; border-radius: 9999px; }
 
+    /* Folhas A4 paginadas para Pré-visualização e Impressão */
+    .pdf-a4-sheet {
+      background: #ffffff;
+      color: #1e293b;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 18px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+      page-break-after: always;
+      break-after: page;
+    }
+    .pdf-a4-sheet:last-child {
+      page-break-after: auto;
+      break-after: auto;
+    }
+
     /* Estilos exclusivos para impressão / PDF A4 */
     #printable-pdf-area {
       display: none;
     }
     @media print {
+      @page {
+        size: A4 portrait;
+        margin: 8mm;
+      }
       body {
         background: #ffffff !important;
       }
@@ -170,6 +193,18 @@
       #printable-pdf-area {
         display: block !important;
         padding: 0 !important;
+      }
+      .pdf-a4-sheet {
+        border: none !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        page-break-after: always !important;
+        break-after: page !important;
+      }
+      .pdf-a4-sheet:last-child {
+        page-break-after: auto !important;
+        break-after: auto !important;
       }
     }
   </style>
@@ -850,6 +885,43 @@
     </div>
   </div>
 
+  <!-- MODAL DE PRÉ-VISUALIZAÇÃO E DOWNLOAD DE PDF MULTIPÁGINAS (CELULAR & PC) -->
+  <div id="pdf-preview-modal" class="hidden fixed inset-0 z-50 bg-slate-900/70 flex items-center justify-center p-3 md:p-5 no-print">
+    <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[92vh] flex flex-col border border-bordersoft shadow-2xl overflow-hidden">
+      <div class="bg-forest-800 text-white px-4 py-3.5 flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <div class="flex items-center gap-2">
+            <h3 class="text-sm font-extrabold m-0">📄 Relatório PDF Multipáginas A4 (Sem Cortes no Celular)</h3>
+            <span class="text-[10px] font-bold bg-emerald-500/30 text-emerald-100 px-2 py-0.5 rounded-full border border-emerald-400/30">3 Páginas A4 Completas</span>
+          </div>
+          <p class="text-[11px] text-emerald-100/90 m-0">Inclui Perfil + Projeção de Meta + 7 Dias de Cardápio (Seg a Dom) + Lista de Compras + Meal Prep</p>
+        </div>
+        <button type="button" onclick="closePdfModal()" class="text-white hover:text-emerald-200 text-lg font-extrabold px-2">✕</button>
+      </div>
+
+      <!-- Barra de Ações do PDF -->
+      <div class="bg-surface px-4 py-3 border-b border-bordersoft flex flex-wrap items-center justify-between gap-2">
+        <label class="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer">
+          <input id="pdf-include-extras" type="checkbox" checked onchange="renderPdfPreviewSheets()" class="rounded text-forest-800 w-4 h-4" />
+          <span>Incluir Página 3 (Lista de Compras Semanal + Guia Meal Prep 1h)</span>
+        </label>
+        <div class="flex flex-wrap items-center gap-2">
+          <button type="button" onclick="downloadVectorPDF()" id="btn-download-vector-pdf" class="inline-flex items-center gap-1.5 bg-forest-800 hover:bg-forest-700 text-white text-xs font-extrabold px-4 py-2.5 rounded-xl shadow-sm transition">
+            <span>⬇️</span>
+            <span>Baixar Arquivo .PDF (Completo p/ Celular)</span>
+          </button>
+          <button type="button" onclick="triggerNativeSystemPrint()" class="inline-flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-forest-800 border border-emerald-300 text-xs font-extrabold px-3.5 py-2.5 rounded-xl transition">
+            <span>🖨️</span>
+            <span>Imprimir / Salvar PDF do Sistema</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Pré-visualização das 3 Páginas A4 na Tela -->
+      <div id="pdf-modal-sheets-preview" class="p-4 overflow-y-auto bg-slate-200/70 space-y-4"></div>
+    </div>
+  </div>
+
   <!-- ÁREA OCULTA PARA IMPRESSÃO / EXPORTAÇÃO PDF A4 -->
   <div id="printable-pdf-area"></div>
 
@@ -883,9 +955,9 @@
       },
       musculo: {
         key: 'musculo', label: 'Músculo Bovino Cozido', category: 'Proteínas & Ovos', pantryGroup: 'prot',
-        tacoCode: 'TACO nº 362', refPortion: '100g cozido',
+        tacoCode: 'TACO nº 356', refPortion: '100g cozido',
         unit: 'g', role: 'protein', slots: ['lunch', 'dinner'],
-        // TACO 362 (Carne, bovina, músculo, sem gordura, cozido): 194 kcal, 31,2g P, 0,0g C, 6,7g G por 100g
+        // TACO 356 (Carne, bovina, músculo, sem gordura, cozido): 194 kcal, 31,2g P, 0,0g C, 6,7g G por 100g
         p: 0.312, c: 0.000, f: 0.067, kcal: 1.94,
         min: 80, max: 300, step: 10, rawFactor: 1.40,
         titleName: 'Músculo Bovino Cozido Desfiado'
@@ -901,18 +973,18 @@
       },
       whey: {
         key: 'whey', label: 'Whey Protein Concentrado 80%', category: 'Laticínios & Suplementos', pantryGroup: 'prot',
-        tacoCode: 'TBCA / Laudo Padrão', refPortion: '100g (Dose 30g = 24g P)',
+        tacoCode: 'TBCA S0001', refPortion: '100g (Dose 30g = 24g P)',
         unit: 'g', role: 'protein', slots: ['breakfast', 'snack', 'pre', 'post'],
-        // Padrão TBCA WPC 80%: 100g = 400 kcal, 80,0g P, 6,7g C, 5,0g G
+        // Padrão TBCA S0001 WPC 80%: 100g = 400 kcal, 80,0g P, 6,7g C, 5,0g G
         p: 0.800, c: 0.067, f: 0.050, kcal: 4.00,
         min: 20, max: 60, step: 5, rawFactor: 1,
         titleName: 'Whey Protein'
       },
       leite: {
         key: 'leite', label: 'Leite de Vaca Desnatado', category: 'Laticínios & Suplementos', pantryGroup: 'prot',
-        tacoCode: 'TACO nº 445', refPortion: '100ml UHT',
+        tacoCode: 'TACO nº 442', refPortion: '100ml UHT',
         unit: 'ml', role: 'liquid', slots: ['breakfast', 'snack', 'post'],
-        // TACO 445 (Leite, de vaca, desnatado, UHT): 100ml = 35 kcal, 3,6g P, 5,0g C, 0,1g G
+        // TACO 442 (Leite, de vaca, desnatado, UHT): 100ml = 35 kcal, 3,6g P, 5,0g C, 0,1g G
         p: 0.036, c: 0.050, f: 0.001, kcal: 0.35,
         min: 100, max: 300, step: 50, rawFactor: 1,
         titleName: 'Leite Desnatado'
@@ -957,9 +1029,9 @@
       },
       pao_integral: {
         key: 'pao_integral', label: 'Pão de Forma Integral', category: 'Grãos & Carboidratos', pantryGroup: 'carb',
-        tacoCode: 'TACO nº 42', refPortion: '100g (2 fatias = 50g)',
+        tacoCode: 'TACO nº 47', refPortion: '100g (2 fatias = 50g)',
         unit: 'g', role: 'carb', slots: ['breakfast', 'snack', 'pre', 'post'],
-        // TACO 42 (Pão, trigo, forma, integral): 100g = 253 kcal, 9,4g P, 49,9g C, 3,7g G
+        // TACO 47 (Pão, trigo, forma, integral): 100g = 253 kcal, 9,4g P, 49,9g C, 3,7g G
         p: 0.094, c: 0.499, f: 0.037, kcal: 2.53,
         min: 25, max: 125, step: 25, rawFactor: 1,
         titleName: 'Pão de Forma Integral'
@@ -977,18 +1049,18 @@
       // --- FRUTAS & GORDURAS BOAS BASE (TACO 4ª Edição / TBCA) ---
       banana: {
         key: 'banana', label: 'Banana Nanica / Prata', category: 'Hortifruti & Tubérculos', pantryGroup: 'fruit_fat',
-        tacoCode: 'TACO nº 178', refPortion: '100g (s/ casca)',
+        tacoCode: 'TACO nº 177', refPortion: '100g (s/ casca)',
         unit: 'g', role: 'carb', slots: ['breakfast', 'snack', 'pre', 'post'],
-        // TACO 178 (Banana, nanica, crua): 100g = 92 kcal, 1,4g P, 23,8g C, 0,1g G
+        // TACO 177 (Banana, nanica, crua): 100g = 92 kcal, 1,4g P, 23,8g C, 0,1g G
         p: 0.014, c: 0.238, f: 0.001, kcal: 0.92,
         min: 60, max: 210, step: 15, rawFactor: 1.30,
         titleName: 'Banana'
       },
       pasta_amendoim: {
         key: 'pasta_amendoim', label: 'Pasta de Amendoim Integral', category: 'Gorduras Boas & Sementes', pantryGroup: 'fruit_fat',
-        tacoCode: 'TBCA / TACO nº 585', refPortion: '100g integral s/ açúcar',
+        tacoCode: 'TBCA C0154', refPortion: '100g integral s/ açúcar',
         unit: 'g', role: 'fat', slots: ['breakfast', 'snack', 'pre', 'post'],
-        // TBCA Pasta de Amendoim Integral: 100g = 595 kcal, 26,0g P, 18,0g C, 49,0g G
+        // TBCA C0154 Pasta de Amendoim Integral: 100g = 595 kcal, 26,0g P, 18,0g C, 49,0g G
         p: 0.260, c: 0.180, f: 0.490, kcal: 5.95,
         min: 10, max: 35, step: 5, rawFactor: 1,
         titleName: 'Pasta de Amendoim Integral'
@@ -1026,9 +1098,9 @@
       },
       patinho: {
         key: 'patinho', label: 'Patinho Bovino Grelhado/Moído', category: 'Proteínas & Ovos', pantryGroup: 'prot',
-        tacoCode: 'TACO nº 368', refPortion: '100g grelhado',
+        tacoCode: 'TACO nº 366', refPortion: '100g grelhado',
         unit: 'g', role: 'protein', slots: ['lunch', 'dinner'],
-        // TACO 368 (Carne, bovina, patinho, sem gordura, grelhado): 100g = 219 kcal, 35,9g P, 0,0g C, 7,3g G
+        // TACO 366 (Carne, bovina, patinho, sem gordura, grelhado): 100g = 219 kcal, 35,9g P, 0,0g C, 7,3g G
         p: 0.359, c: 0.000, f: 0.073, kcal: 2.19,
         min: 80, max: 300, step: 10, rawFactor: 1.30,
         titleName: 'Patinho Bovino Magro Grelhado', isExtraCatalog: true
@@ -2044,6 +2116,47 @@
        6. INTERATIVIDADE DA DESPENSA EXPANSÍVEL & PERSISTÊNCIA LOCAL
        ========================================================================== */
     const STORAGE_KEY_CUSTOM_PANTRY = 'nutribasic_pro_pantry_v2';
+    const STORAGE_KEY_USER_PROFILE  = 'nutribasic_pro_profile_v2';
+
+    function saveProfileToLocalStorage() {
+      try {
+        if (!hasValidProfile()) {
+          localStorage.removeItem(STORAGE_KEY_USER_PROFILE);
+          return;
+        }
+        localStorage.setItem(STORAGE_KEY_USER_PROFILE, JSON.stringify(appState.profile));
+      } catch (e) {}
+    }
+
+    function loadProfileFromLocalStorage() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY_USER_PROFILE);
+        if (!raw) return false;
+        const saved = JSON.parse(raw);
+        if (!saved || !saved.age || !saved.height || !saved.weight) return false;
+
+        document.getElementById('input-name').value = saved.name || '';
+        document.getElementById('input-sex').value = saved.sex || 'M';
+        document.getElementById('input-age').value = saved.age || '';
+        document.getElementById('input-height').value = saved.height || '';
+        document.getElementById('input-weight').value = saved.weight || '';
+        if (document.getElementById('input-goal-weight')) {
+          document.getElementById('input-goal-weight').value = saved.goalWeight || '';
+        }
+        if (document.getElementById('input-protein-anchor')) {
+          document.getElementById('input-protein-anchor').value = saved.proteinAnchor || 'goal_weight';
+        }
+        document.getElementById('input-goal').value = saved.goal || 'cut_050';
+        document.getElementById('input-freq').value = String(saved.freq !== undefined ? saved.freq : 5);
+        document.getElementById('input-workout-time').value = saved.workoutTime || 'tarde';
+        document.getElementById('input-protein-ratio').value = saved.proteinRatio || 2.0;
+        document.getElementById('input-routine').value = saved.routine || 'misto';
+        document.getElementById('input-low-oil').checked = saved.lowOil !== false;
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
 
     function savePantryToLocalStorage() {
       try {
@@ -2389,6 +2502,7 @@
 
     function onProfileInputChange() {
       readFormInputsToState();
+      saveProfileToLocalStorage();
       if (hasValidProfile()) {
         generateWeeklyPlan();
       }
@@ -2423,6 +2537,7 @@
       appState.waterBottles = 0;
       appState.checkedShopping = {};
       appState.weeklyPlan = {};
+      try { localStorage.removeItem(STORAGE_KEY_USER_PROFILE); } catch (e) {}
 
       onProfileInputChange();
       focusFirstProfileInput();
@@ -2485,7 +2600,7 @@
       const p = appState.profile;
       const proj = t.projection;
 
-      const userLabel = p.name ? `PLANO PERSONALIZADO DE ${p.name.toUpperCase()};
+      const userLabel = p.name ? `PLANO PERSONALIZADO DE ${p.name.toUpperCase()} (TACO 4ª ED. / TBCA)` : 'MOTOR NUTRICIONAL EM TEMPO REAL (TACO 4ª ED. / TBCA)';
       document.getElementById('engine-user-title').textContent = userLabel;
       document.getElementById('tmb-get-badge').innerHTML = `TMB (Mifflin-St Jeor): <strong>${t.tmb.toLocaleString('pt-BR')} kcal</strong> &bull; Gasto Total (GET): <strong>${t.get.toLocaleString('pt-BR')} kcal</strong>`;
 
@@ -3001,94 +3116,432 @@
       window.open(url, '_blank');
     }
 
-    function exportMenuToPDF() {
-      if (!hasValidProfile()) {
-        showToast('Preencha seus dados corporais antes de gerar o PDF!');
-        return;
-      }
-
-      const p = appState.profile;
-      const t = appState.targets;
-      const proj = t.projection;
-      const printArea = document.getElementById('printable-pdf-area');
-
-      const daysTablesHtml = DAYS_CONFIG.map(d => {
-        const dp = appState.weeklyPlan[d.id];
-        if (!dp) return '';
-        let totP = 0, totC = 0, totF = 0, totKcal = 0;
-        const rows = dp.meals.map(m => {
-          totP += m.macros.p; totC += m.macros.c; totF += m.macros.f; totKcal += m.macros.kcal;
-          const ingStr = m.items.map(i => `<strong>${i.qty}${i.unit}</strong> ${i.name} <em>(${i.tacoCode})</em>`).join(' + ');
-          return `
-            <tr>
-              <td style="padding:5px 7px; border-bottom:1px solid #dce6e1; font-weight:bold; width:130px; color:#1b4336;">${m.time} • ${m.slotTitle}</td>
-              <td style="padding:5px 7px; border-bottom:1px solid #dce6e1;"><strong>${m.title}</strong><br><span style="color:#475569;">${ingStr}</span></td>
-              <td style="padding:5px 7px; border-bottom:1px solid #dce6e1; text-align:center;">${m.macros.p}g</td>
-              <td style="padding:5px 7px; border-bottom:1px solid #dce6e1; text-align:center;">${m.macros.c}g</td>
-              <td style="padding:5px 7px; border-bottom:1px solid #dce6e1; text-align:center;">${m.macros.f}g</td>
-              <td style="padding:5px 7px; border-bottom:1px solid #dce6e1; text-align:center; font-weight:bold;">${m.macros.kcal}</td>
-            </tr>
-          `;
-        }).join('');
-
+    /* ==========================================================================
+       10.1 GERADOR DE PDF MULTIPÁGINAS A4 (MOTOR VETORIAL NATIVO P/ CELULAR & PC)
+            Resolve 100% o corte de páginas em smartphones Android e iOS
+       ========================================================================== */
+    function buildDayTableHtmlForSheet(dayId) {
+      const dp = appState.weeklyPlan[dayId];
+      if (!dp) return '';
+      let totP = 0, totC = 0, totF = 0, totKcal = 0;
+      const rows = dp.meals.map(m => {
+        totP += m.macros.p; totC += m.macros.c; totF += m.macros.f; totKcal += m.macros.kcal;
+        const ingStr = m.items.map(i => {
+          const im = i.itemMacros || { p: 0, c: 0, f: 0, kcal: 0 };
+          return `<strong>${i.qty}${i.unit}</strong> ${i.name} <span style="color:#0f5132; font-size:7.5pt;">[${i.tacoCode} • ${im.p.toFixed(0)}P/${im.c.toFixed(0)}C/${im.f.toFixed(0)}G/${im.kcal}kcal]</span>`;
+        }).join(' + ');
         return `
-          <div style="margin-bottom:12px; page-break-inside:avoid;">
-            <div style="background:#1b4336; color:#fff; padding:5px 10px; font-weight:bold; font-size:10pt; border-radius:6px 6px 0 0;">
-              ${dp.dayName.toUpperCase()} — ${dp.isTrainDay ? 'Dia de Treino' : 'Dia de Descanso'}
-              <span style="float:right; font-size:8.5pt;">Total: ${totP}g P | ${totC}g C | ${totF}g G | ${totKcal} kcal</span>
-            </div>
-            <table style="width:100%; border-collapse:collapse; font-size:8.2pt; border:1px solid #cbd5e1;">
-              <thead>
-                <tr style="background:#eef6f2; color:#1b4336;">
-                  <th style="padding:4px 7px; text-align:left;">Horário</th>
-                  <th style="padding:4px 7px; text-align:left;">Refeição e Quantidades Exatas (Base TACO / TBCA)</th>
-                  <th style="padding:4px 7px; width:42px;">Prot</th>
-                  <th style="padding:4px 7px; width:42px;">Carb</th>
-                  <th style="padding:4px 7px; width:42px;">Gord</th>
-                  <th style="padding:4px 7px; width:50px;">Kcal</th>
-                </tr>
-              </thead>
-              <tbody>${rows}</tbody>
-            </table>
-          </div>
+          <tr>
+            <td style="padding:4px 6px; border-bottom:1px solid #dce6e1; font-weight:bold; width:118px; color:#1b4336; font-size:8pt;">${m.time} • ${m.slotTitle}</td>
+            <td style="padding:4px 6px; border-bottom:1px solid #dce6e1; font-size:8pt;">
+              <div style="font-weight:bold; color:#0f172a;">${m.title}</div>
+              <div style="color:#334155; margin-top:1px;">${ingStr}</div>
+            </td>
+            <td style="padding:4px 5px; border-bottom:1px solid #dce6e1; text-align:center; font-size:8pt;">${m.macros.p}g</td>
+            <td style="padding:4px 5px; border-bottom:1px solid #dce6e1; text-align:center; font-size:8pt;">${m.macros.c}g</td>
+            <td style="padding:4px 5px; border-bottom:1px solid #dce6e1; text-align:center; font-size:8pt;">${m.macros.f}g</td>
+            <td style="padding:4px 5px; border-bottom:1px solid #dce6e1; text-align:center; font-weight:bold; font-size:8pt;">${m.macros.kcal}</td>
+          </tr>
         `;
       }).join('');
 
-      printArea.innerHTML = `
-        <div style="font-family:Arial, sans-serif; color:#1e293b; padding:10px;">
-          <div style="background:#1b4336; color:#fff; padding:14px 18px; border-radius:8px; margin-bottom:12px;">
-            <h1 style="margin:0; font-size:15pt;">NutriBasic PRO — Cardápio Semanal &amp; Projeção de Meta (TACO / TBCA)</h1>
-            <p style="margin:4px 0 0 0; font-size:9pt; color:#d6ebe1;">
-              ${p.name ? `Usuário: ${p.name} • ` : ''}Perfil: ${p.age} anos, ${p.height} cm • Peso Atual: ${p.weight} kg &rarr; Peso Meta: ${proj.goalWeight} kg (Eliminar ${proj.deltaKg.toFixed(1)} kg em ~${proj.weeksEstimated} semanas, até ${proj.targetDateFormatted})
-            </p>
-            <p style="margin:3px 0 0 0; font-size:8.5pt; color:#a7f3d0;">
-              Meta Treino: ${t.train.kcal} kcal (${t.train.p}g P | ${t.train.c}g C | ${t.train.f}g G) • Meta Descanso: ${t.rest.kcal} kcal • Hidratação: ${t.waterMin} a ${t.waterMax} L/dia
-            </p>
+      return `
+        <div style="margin-bottom:10px; page-break-inside:avoid; break-inside:avoid;">
+          <div style="background:${dp.isTrainDay ? '#1b4336' : '#334155'}; color:#fff; padding:4px 9px; font-weight:bold; font-size:9pt; border-radius:5px 5px 0 0; display:flex; justify-content:space-between; align-items:center;">
+            <span>${dp.dayName.toUpperCase()} — ${dp.isTrainDay ? 'Dia de Treino' : 'Dia de Descanso (Carb Cycling)'}</span>
+            <span style="font-size:8pt; color:#a7f3d0;">Total do Dia: ${totP}g P | ${totC}g C | ${totF}g G | ${totKcal} kcal</span>
           </div>
-          ${daysTablesHtml}
+          <table style="width:100%; border-collapse:collapse; border:1px solid #cbd5e1; background:#ffffff;">
+            <thead>
+              <tr style="background:#eef6f2; color:#1b4336; font-size:7.5pt;">
+                <th style="padding:3px 6px; text-align:left;">Horário</th>
+                <th style="padding:3px 6px; text-align:left;">Refeição, Porções &amp; Composição TACO / TBCA</th>
+                <th style="padding:3px 5px; width:36px;">Prot</th>
+                <th style="padding:3px 5px; width:36px;">Carb</th>
+                <th style="padding:3px 5px; width:36px;">Gord</th>
+                <th style="padding:3px 5px; width:44px;">Kcal</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function buildPaginatedA4SheetsHtml(includeExtras = true) {
+      const p = appState.profile;
+      const t = appState.targets;
+      const proj = t.projection;
+
+      const sheetHeaderHtml = (pageNum, totalPages, subtitle) => `
+        <div style="background:#1b4336; color:#fff; padding:11px 14px; border-radius:7px; margin-bottom:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+            <div>
+              <div style="font-size:13pt; font-weight:800; letter-spacing:-0.3px;">NutriBasic PRO — Planejamento Nutricional (TACO / TBCA)</div>
+              <div style="font-size:8.5pt; color:#d6ebe1; margin-top:2px;">${subtitle}</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.14); padding:4px 9px; border-radius:6px; font-size:8pt; font-weight:bold; white-space:nowrap;">
+              Folha A4 • Pág. ${pageNum}/${totalPages}
+            </div>
+          </div>
+          <div style="margin-top:8px; padding-top:7px; border-top:1px solid rgba(255,255,255,0.18); font-size:8pt; color:#ecfdf5; display:flex; flex-wrap:wrap; gap:12px;">
+            <span><strong>Usuário:</strong> ${p.name || 'Individual'} (${p.sex === 'M' ? 'Masc.' : 'Fem.'}, ${p.age} anos, ${p.height} cm)</span>
+            <span><strong>Peso:</strong> ${p.weight} kg &rarr; <strong>Meta:</strong> ${proj.goalWeight} kg (-${proj.deltaKg.toFixed(1)} kg em ~${proj.weeksEstimated} sem • ${proj.targetDateFormatted})</span>
+            <span><strong>Marcos:</strong> 30d: ${proj.w30.toFixed(1)}kg | 60d: ${proj.w60.toFixed(1)}kg | 90d: ${proj.w90.toFixed(1)}kg</span>
+          </div>
+          <div style="margin-top:4px; font-size:8pt; color:#a7f3d0; display:flex; flex-wrap:wrap; gap:12px;">
+            <span><strong>TMB/GET:</strong> ${t.tmb} / ${t.get} kcal</span>
+            <span><strong>Treino:</strong> ${t.train.kcal} kcal (${t.train.p}g P | ${t.train.c}g C | ${t.train.f}g G)</span>
+            <span><strong>Descanso:</strong> ${t.rest.kcal} kcal (${t.rest.p}g P | ${t.rest.c}g C | ${t.rest.f}g G)</span>
+            <span><strong>Água:</strong> ${t.waterMin} a ${t.waterMax} L/dia</span>
+          </div>
         </div>
       `;
 
-      if (typeof html2pdf !== 'undefined') {
-        showToast('📄 Gerando arquivo PDF A4...');
-        printArea.style.display = 'block';
-        const opt = {
-          margin: 8,
-          filename: `cardapio_nutribasic_${(p.name || 'semanal').toLowerCase().replace(/\s+/g, '_')}.pdf`,
-          image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { scale: 2 },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-        html2pdf().set(opt).from(printArea).save().then(() => {
-          printArea.style.display = 'none';
-          showToast('✅ PDF baixado com sucesso!');
-        }).catch(() => {
-          printArea.style.display = 'none';
-          window.print();
-        });
-      } else {
-        window.print();
+      const totalPages = includeExtras ? 3 : 2;
+
+      // FOLHA 1: Segunda, Terça e Quarta-Feira
+      const page1Days = ['seg', 'ter', 'qua'].map(id => buildDayTableHtmlForSheet(id)).join('');
+      const sheet1 = `
+        <div class="pdf-a4-sheet">
+          ${sheetHeaderHtml(1, totalPages, 'Parte 1: Metas, Projeção de Peso Meta & Cardápio de Segunda a Quarta-Feira')}
+          ${page1Days}
+        </div>
+      `;
+
+      // FOLHA 2: Quinta, Sexta, Sábado e Domingo
+      const page2Days = ['qui', 'sex', 'sab', 'dom'].map(id => buildDayTableHtmlForSheet(id)).join('');
+      const sheet2 = `
+        <div class="pdf-a4-sheet">
+          ${sheetHeaderHtml(2, totalPages, 'Parte 2: Cardápio de Quinta-Feira a Domingo (Todos os 7 Dias Completos)')}
+          ${page2Days}
+        </div>
+      `;
+
+      if (!includeExtras) {
+        return sheet1 + sheet2;
       }
+
+      // FOLHA 3: Lista de Compras Consolidada + Guia Meal Prep 1h
+      const totals = computeWeeklyIngredientTotals();
+      const shopRows = Object.keys(totals).map(key => {
+        const ing = INGREDIENTS[key];
+        if (!ing) return '';
+        const cooked = totals[key].cookedQty;
+        const rawBuy = Math.round(cooked * (ing.rawFactor || 1));
+        const buyFormatted = (ing.unit === 'g' && rawBuy >= 1000)
+          ? `${(rawBuy / 1000).toFixed(2).replace('.', ',')} kg (${rawBuy}g)`
+          : `${rawBuy} ${ing.unit}`;
+        return `
+          <tr>
+            <td style="padding:4px 7px; border-bottom:1px solid #e2e8f0; font-weight:bold;">${ing.label}</td>
+            <td style="padding:4px 7px; border-bottom:1px solid #e2e8f0; color:#475569;">${ing.category}</td>
+            <td style="padding:4px 7px; border-bottom:1px solid #e2e8f0; color:#0f5132; font-weight:bold;">${ing.tacoCode || 'TACO/TBCA'}</td>
+            <td style="padding:4px 7px; border-bottom:1px solid #e2e8f0; text-align:right;">${cooked} ${ing.unit}</td>
+            <td style="padding:4px 7px; border-bottom:1px solid #e2e8f0; text-align:right; font-weight:800; color:#1b4336;">${buyFormatted}</td>
+          </tr>
+        `;
+      }).join('');
+
+      const sheet3 = `
+        <div class="pdf-a4-sheet">
+          ${sheetHeaderHtml(3, totalPages, 'Parte 3: Lista de Compras Semanal (7 Dias) & Guia Meal Prep de 1 Hora no Domingo')}
+          <div style="margin-bottom:12px;">
+            <div style="background:#1b4336; color:#fff; padding:5px 10px; font-weight:bold; font-size:9pt; border-radius:5px 5px 0 0;">
+              🛒 LISTA DE COMPRAS SEMANAL CONSOLIDADA (PESO CRU DE COMPRA VS. PESO PRONTO)
+            </div>
+            <table style="width:100%; border-collapse:collapse; border:1px solid #cbd5e1; font-size:8pt; background:#fff;">
+              <thead>
+                <tr style="background:#eef6f2; color:#1b4336;">
+                  <th style="padding:4px 7px; text-align:left;">Alimento</th>
+                  <th style="padding:4px 7px; text-align:left;">Setor</th>
+                  <th style="padding:4px 7px; text-align:left;">Ref. Oficial</th>
+                  <th style="padding:4px 7px; text-align:right;">Total Pronto (7d)</th>
+                  <th style="padding:4px 7px; text-align:right;">Comprar no Mercado (Cru)</th>
+                </tr>
+              </thead>
+              <tbody>${shopRows}</tbody>
+            </table>
+          </div>
+
+          <div style="background:#f8faf9; border:1px solid #cbd5e1; border-radius:7px; padding:10px; font-size:8pt; color:#1e293b;">
+            <div style="font-weight:800; color:#1b4336; font-size:9pt; margin-bottom:5px;">⏱️ RESUMO DO MEAL PREP DE 1 HORA NO DOMINGO &amp; CONSERVAÇÃO SEGURA</div>
+            <p style="margin:0 0 4px 0;"><strong>1. Minutos 00–15:</strong> Coloque o peito de frango ou músculo na panela de pressão (20 min) e cozinhe os ovos da semana (9 min) em paralelo.</p>
+            <p style="margin:0 0 4px 0;"><strong>2. Minutos 15–35:</strong> Grelhe os medalhões suínos/bovinos na frigideira antiaderente sem óleo e monte 3 potes de Overnight Oats (Seg a Qua).</p>
+            <p style="margin:0;"><strong>3. Minutos 35–60 (Regra Geladeira vs. Freezer):</strong> Desfie o frango sacudindo a panela por 15s. Guarde as marmitas de <strong>Segunda a Quarta na prateleira mais fria da geladeira</strong> e congele imediatamente no <strong>Freezer as porções de Quinta e Sexta</strong>.</p>
+          </div>
+        </div>
+      `;
+
+      return sheet1 + sheet2 + sheet3;
+    }
+
+    function exportMenuToPDF() {
+      if (!hasValidProfile()) {
+        showToast('Preencha seus dados corporais (Idade, Altura e Peso) antes de gerar o PDF!');
+        focusFirstProfileInput();
+        return;
+      }
+      renderPdfPreviewSheets();
+      document.getElementById('pdf-preview-modal').classList.remove('hidden');
+    }
+
+    function closePdfModal() {
+      document.getElementById('pdf-preview-modal').classList.add('hidden');
+    }
+
+    function renderPdfPreviewSheets() {
+      const includeExtras = document.getElementById('pdf-include-extras')?.checked !== false;
+      const html = buildPaginatedA4SheetsHtml(includeExtras);
+      const modalPreview = document.getElementById('pdf-modal-sheets-preview');
+      const printArea = document.getElementById('printable-pdf-area');
+      if (modalPreview) modalPreview.innerHTML = html;
+      if (printArea) printArea.innerHTML = html;
+    }
+
+    function triggerNativeSystemPrint() {
+      renderPdfPreviewSheets();
+      window.print();
+    }
+
+    // MOTOR VETORIAL NATIVO MULTIPÁGINAS (jsPDF) — NÃO USA SCREENSHOT DE TELA, NUNCA CORTA NO CELULAR!
+    function downloadVectorPDF() {
+      if (!hasValidProfile()) return;
+
+      const jspdfNS = window.jspdf;
+      if (!jspdfNS || !jspdfNS.jsPDF) {
+        triggerNativeSystemPrint();
+        return;
+      }
+
+      const includeExtras = document.getElementById('pdf-include-extras')?.checked !== false;
+      const doc = new jspdfNS.jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const p = appState.profile;
+      const t = appState.targets;
+      const proj = t.projection;
+
+      const pageW = 210;
+      const pageH = 297;
+      const margin = 10;
+      const contentW = pageW - (margin * 2);
+      let y = 10;
+
+      function ensureSpace(neededMm) {
+        if (y + neededMm > pageH - 14) {
+          doc.addPage();
+          y = 12;
+          drawMiniPageHeader();
+        }
+      }
+
+      function drawMiniPageHeader() {
+        doc.setFillColor(27, 67, 54);
+        doc.roundedRect(margin, y, contentW, 8, 1.5, 1.5, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.text(`NutriBasic PRO — Cardapio Semanal (TACO / TBCA) ${p.name ? '• ' + p.name : ''}`, margin + 3, y + 5.3);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7.5);
+        doc.text(`Treino: ${t.train.kcal} kcal (${t.train.p}g P | ${t.train.c}g C | ${t.train.f}g G) • Meta: ${proj.goalWeight} kg`, pageW - margin - 3, y + 5.3, { align: 'right' });
+        y += 11;
+      }
+
+      // CABEÇALHO PRINCIPAL DA PÁGINA 1
+      doc.setFillColor(27, 67, 54);
+      doc.roundedRect(margin, y, contentW, 29, 2.5, 2.5, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(13);
+      doc.text('NutriBasic PRO — Planejamento Nutricional (TACO / TBCA)', margin + 4, y + 7);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.3);
+      const userLine = `Usuario: ${p.name || 'Individual'} (${p.sex === 'M' ? 'Masculino' : 'Feminino'}, ${p.age} anos, ${p.height} cm) | Peso Atual: ${p.weight} kg -> Peso Meta: ${proj.goalWeight} kg`;
+      doc.text(userLine, margin + 4, y + 13);
+
+      const projLine = proj.deltaKg > 0
+        ? `Projecao (7.700 kcal/kg): Eliminar ${proj.deltaKg.toFixed(1)} kg (-${proj.weeklyRateKg.toFixed(2)} kg/sem) | Prazo: ~${proj.weeksEstimated} sem (${proj.targetDateFormatted}) | 30d: ${proj.w30.toFixed(1)}kg • 60d: ${proj.w60.toFixed(1)}kg • 90d: ${proj.w90.toFixed(1)}kg`
+        : `Objetivo: Manutencao / Ganho Limpo | TMB: ${t.tmb} kcal | GET: ${t.get} kcal`;
+      doc.text(projLine, margin + 4, y + 18.5);
+
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(167, 243, 208);
+      const macroLine = `Metas Treino: ${t.train.kcal} kcal (${t.train.p}g P | ${t.train.c}g C | ${t.train.f}g G)  •  Descanso: ${t.rest.kcal} kcal (${t.rest.p}g P | ${t.rest.c}g C | ${t.rest.f}g G)  •  Agua: ${t.waterMin}-${t.waterMax} L/dia`;
+      doc.text(macroLine, margin + 4, y + 24.5);
+
+      y += 33;
+
+      // RENDERIZA TODOS OS 7 DIAS (SEGUNDA A DOMINGO) COM PAGINAÇÃO AUTOMÁTICA
+      DAYS_CONFIG.forEach((dayCfg) => {
+        const dp = appState.weeklyPlan[dayCfg.id];
+        if (!dp) return;
+
+        let totP = 0, totC = 0, totF = 0, totKcal = 0;
+        dp.meals.forEach(m => {
+          totP += m.macros.p; totC += m.macros.c; totF += m.macros.f; totKcal += m.macros.kcal;
+        });
+
+        ensureSpace(24);
+
+        // Barra de título do Dia
+        if (dp.isTrainDay) {
+          doc.setFillColor(27, 67, 54);
+        } else {
+          doc.setFillColor(51, 65, 85);
+        }
+        doc.roundedRect(margin, y, contentW, 7.2, 1.2, 1.2, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.8);
+        doc.text(`${dp.dayName.toUpperCase()} — ${dp.isTrainDay ? 'DIA DE TREINO' : 'DIA DE DESCANSO (CARB CYCLING)'}`, margin + 3, y + 4.9);
+
+        doc.setFontSize(8);
+        doc.setTextColor(167, 243, 208);
+        doc.text(`Total: ${totP}g P | ${totC}g C | ${totF}g G | ${totKcal} kcal`, pageW - margin - 3, y + 4.9, { align: 'right' });
+        y += 8.2;
+
+        // Refeições do Dia
+        dp.meals.forEach((m) => {
+          const ingLinesText = m.items.map(it => {
+            const im = it.itemMacros || { p: 0, c: 0, f: 0, kcal: 0 };
+            return `• ${it.qty}${it.unit}${it.gramEq || ''} ${it.name} [${it.tacoCode}: ${im.p.toFixed(0)}g P, ${im.c.toFixed(0)}g C, ${im.f.toFixed(0)}g G, ${im.kcal} kcal]`;
+          });
+
+          const wrappedItems = [];
+          ingLinesText.forEach(line => {
+            const split = doc.splitTextToSize(line, contentW - 42);
+            split.forEach(s => wrappedItems.push(s));
+          });
+
+          const boxH = 6.2 + (wrappedItems.length * 3.8) + 2;
+          ensureSpace(boxH + 2);
+
+          doc.setFillColor(248, 250, 249);
+          doc.setDrawColor(213, 226, 220);
+          doc.roundedRect(margin, y, contentW, boxH, 1, 1, 'FD');
+
+          // Horário + Nome da Refeição
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(8);
+          doc.setTextColor(27, 67, 54);
+          const mealHeader = `${m.time} • ${m.slotTitle}: ${m.title}`;
+          doc.text(doc.splitTextToSize(mealHeader, contentW - 46)[0], margin + 2.5, y + 4.4);
+
+          // Macros da Refeição à direita
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(7.4);
+          doc.setTextColor(15, 23, 42);
+          doc.text(`${m.macros.p}P | ${m.macros.c}C | ${m.macros.f}G | ${m.macros.kcal} kcal`, pageW - margin - 2.5, y + 4.4, { align: 'right' });
+
+          // Lista de ingredientes com código TACO/TBCA
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(7.3);
+          doc.setTextColor(51, 65, 85);
+          let itemY = y + 8.3;
+          wrappedItems.forEach(wLine => {
+            doc.text(wLine, margin + 3.5, itemY);
+            itemY += 3.7;
+          });
+
+          y += boxH + 1.4;
+        });
+
+        y += 2.5;
+      });
+
+      // PÁGINA ADICIONAL: LISTA DE COMPRAS SEMANAL + MEAL PREP 1H
+      if (includeExtras) {
+        doc.addPage();
+        y = 12;
+        drawMiniPageHeader();
+
+        doc.setFillColor(27, 67, 54);
+        doc.roundedRect(margin, y, contentW, 7.5, 1.2, 1.2, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.text('LISTA DE COMPRAS SEMANAL CONSOLIDADA (SOMA EXATA DE SEGUNDA A DOMINGO)', margin + 3, y + 5.1);
+        y += 9.5;
+
+        const totals = computeWeeklyIngredientTotals();
+        Object.keys(totals).forEach(key => {
+          const ing = INGREDIENTS[key];
+          if (!ing) return;
+          ensureSpace(7);
+
+          const cooked = totals[key].cookedQty;
+          const rawBuy = Math.round(cooked * (ing.rawFactor || 1));
+          const buyFormatted = (ing.unit === 'g' && rawBuy >= 1000)
+            ? `${(rawBuy / 1000).toFixed(2).replace('.', ',')} kg (${rawBuy}g crus)`
+            : `${rawBuy} ${ing.unit}`;
+
+          doc.setFillColor(248, 250, 249);
+          doc.setDrawColor(220, 230, 225);
+          doc.rect(margin, y, contentW, 6.2, 'FD');
+
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(8);
+          doc.setTextColor(15, 23, 42);
+          doc.text(`[  ] ${ing.label} (${ing.tacoCode || 'TACO/TBCA'})`, margin + 2.5, y + 4.3);
+
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(7.5);
+          doc.setTextColor(71, 85, 105);
+          doc.text(`Rende ${cooked}${ing.unit} prontos`, margin + 108, y + 4.3);
+
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(8);
+          doc.setTextColor(27, 67, 54);
+          doc.text(`Comprar: ${buyFormatted}`, pageW - margin - 2.5, y + 4.3, { align: 'right' });
+
+          y += 6.8;
+        });
+
+        y += 4;
+        ensureSpace(34);
+        doc.setFillColor(238, 246, 242);
+        doc.setDrawColor(27, 67, 54);
+        doc.roundedRect(margin, y, contentW, 30, 1.5, 1.5, 'FD');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.8);
+        doc.setTextColor(27, 67, 54);
+        doc.text('CRONOGRAMA MEAL PREP DE 1 HORA NO DOMINGO & CONSERVACAO SEGURA', margin + 3, y + 5.5);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7.6);
+        doc.setTextColor(30, 41, 59);
+        const prepLines = [
+          '1. Minutos 00 a 15: Cozinhe o peito de frango ou musculo na panela de pressao (20 min) e os ovos cozidos da semana (9 min).',
+          '2. Minutos 15 a 35: Grelhe os filets suinos/bovinos em frigideira antiaderente sem oleo e monte 3 potes de Overnight Oats.',
+          '3. Minutos 35 a 60: Desfie o frango sacudindo a panela fechada por 15s e divida em potes etiquetados.',
+          '4. Conservacao Segura: Potes de Segunda a Quarta ficam na Geladeira (ate 72h). Potes de Quinta e Sexta vao para o Freezer.'
+        ];
+        let py = y + 11;
+        prepLines.forEach(pl => {
+          doc.text(pl, margin + 3, py);
+          py += 4.8;
+        });
+      }
+
+      // Numeração de páginas no rodapé de todas as páginas
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7.2);
+        doc.setTextColor(100, 116, 139);
+        doc.text(
+          `NutriBasic PRO • Base Oficial Tabela TACO (4a Ed. NEPA/UNICAMP) & TBCA (USP) • Pagina ${i} de ${pageCount}`,
+          pageW / 2,
+          pageH - 5,
+          { align: 'center' }
+        );
+      }
+
+      const safeFileName = `cardapio_nutribasic_${(p.name || '7dias').toLowerCase().replace(/[^a-z0-9]/g, '_')}.pdf`;
+      doc.save(safeFileName);
+      showToast(`✅ PDF completo (${pageCount} páginas A4) baixado sem cortes!`);
     }
 
     /* ==========================================================================
@@ -3139,6 +3592,7 @@
     window.addEventListener('DOMContentLoaded', () => {
       setDefaultPantry();
       loadPantryFromLocalStorage();
+      loadProfileFromLocalStorage();
       readFormInputsToState();
       if (hasValidProfile()) {
         generateWeeklyPlan();
