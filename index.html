@@ -222,9 +222,6 @@
             <p class="text-[11px] text-emerald-200/90 m-0">Preencha para calcular suas metas individuais</p>
           </div>
           <div class="flex items-center gap-1.5 shrink-0">
-            <button type="button" onclick="fillExampleProfile()" class="text-[11px] font-bold bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded-lg border border-emerald-400 transition" title="Preencher com exemplo 42 anos, 182cm, 106kg">
-              ⚡ Exemplo
-            </button>
             <button type="button" onclick="clearProfileForNewUser()" class="text-[11px] font-semibold bg-forest-700 hover:bg-forest-600 text-white px-2.5 py-1 rounded-lg border border-forest-600 transition">
               Limpar Campos
             </button>
@@ -252,15 +249,15 @@
               </div>
               <div>
                 <label class="block text-xs font-semibold text-slate-600 mb-1">Idade (anos) *</label>
-                <input id="input-age" type="number" min="14" max="95" placeholder="Ex: 42" value="42" required oninput="onProfileInputChange()" />
+                <input id="input-age" type="number" min="14" max="95" placeholder="Ex: 35" value="" required oninput="onProfileInputChange()" />
               </div>
               <div>
                 <label class="block text-xs font-semibold text-slate-600 mb-1">Altura (cm) *</label>
-                <input id="input-height" type="number" min="130" max="225" placeholder="Ex: 182" value="182" required oninput="onProfileInputChange()" />
+                <input id="input-height" type="number" min="130" max="225" placeholder="Ex: 175" value="" required oninput="onProfileInputChange()" />
               </div>
               <div>
                 <label class="block text-xs font-semibold text-slate-600 mb-1">Peso (kg) *</label>
-                <input id="input-weight" type="number" step="0.5" min="35" max="240" placeholder="Ex: 106" value="106" required oninput="onProfileInputChange()" />
+                <input id="input-weight" type="number" step="0.5" min="35" max="240" placeholder="Ex: 80" value="" required oninput="onProfileInputChange()" />
               </div>
             </div>
           </div>
@@ -457,19 +454,16 @@
       <!-- COLUNA DIREITA: DASHBOARD DE METAS, ABAS E CARDÁPIO SEMANAL -->
       <section class="space-y-4">
 
-        <!-- AVISO QUANDO OS CAMPOS FORAM LIMPOS PARA NOVO USUÁRIO -->
-        <div id="empty-profile-banner" class="hidden card-panel p-8 text-center">
+        <!-- AVISO QUANDO OS CAMPOS ESTÃO EM BRANCO PARA NOVO USUÁRIO -->
+        <div id="empty-profile-banner" class="card-panel p-8 text-center">
           <div class="w-12 h-12 rounded-2xl bg-forest-100 text-forest-800 font-extrabold text-xl flex items-center justify-center mx-auto mb-3">👤</div>
           <h2 class="text-lg font-extrabold text-forest-800 mb-1">Preencha seus Dados Corporais para Começar</h2>
           <p class="text-xs text-slate-600 max-w-md mx-auto mb-4">
-            Informe sua <strong>Idade, Altura e Peso</strong> no painel à esquerda para que o NutriBasic calcule sua Taxa Metabólica, metas de proteína e monte seus 7 dias de cardápio.
+            Informe sua <strong>Idade, Altura e Peso</strong> no painel à esquerda para que o NutriBasic calcule sua Taxa Metabólica, metas de proteína e monte seus 7 dias de cardápio com base na Tabela TACO / TBCA.
           </p>
           <div class="flex flex-wrap justify-center gap-2">
             <button type="button" onclick="focusFirstProfileInput()" class="bg-forest-800 hover:bg-forest-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl">
               Inserir Meus Dados Agora
-            </button>
-            <button type="button" onclick="fillExampleProfile()" class="bg-emerald-50 hover:bg-emerald-100 text-forest-800 text-xs font-bold px-4 py-2.5 rounded-xl border border-emerald-200">
-              ⚡ Carregar Exemplo (42a, 182cm, 106kg)
             </button>
           </div>
         </div>
@@ -1500,9 +1494,9 @@
       profile: {
         name: '',
         sex: 'M',
-        age: 42,
-        height: 182,
-        weight: 106,
+        age: 0,
+        height: 0,
+        weight: 0,
         goal: 'recomp',
         freq: 5,
         workoutTime: 'tarde',
@@ -2251,23 +2245,7 @@
 
       onProfileInputChange();
       focusFirstProfileInput();
-      showToast('Campos limpos! Insira os dados do novo usuário.');
-    }
-
-    function fillExampleProfile() {
-      document.getElementById('input-name').value = 'Carlos (Exemplo)';
-      document.getElementById('input-sex').value = 'M';
-      document.getElementById('input-age').value = '42';
-      document.getElementById('input-height').value = '182';
-      document.getElementById('input-weight').value = '106';
-      document.getElementById('input-goal').value = 'recomp';
-      document.getElementById('input-freq').value = '5';
-      document.getElementById('input-workout-time').value = 'tarde';
-      document.getElementById('input-protein-ratio').value = 2.1;
-      document.getElementById('input-routine').value = 'misto';
-      document.getElementById('input-low-oil').checked = true;
-      onProfileInputChange();
-      showToast('⚡ Perfil exemplo (42 anos, 182cm, 106kg) carregado!');
+      showToast('Campos limpos! Insira os dados do usuário.');
     }
 
     function focusFirstProfileInput() {
@@ -2926,6 +2904,10 @@
         generateWeeklyPlan();
       }
       renderAll();
+
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./service-worker.js').catch(() => {});
+      }
     });
   </script>
 </body>
