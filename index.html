@@ -529,7 +529,7 @@
           <div class="flex flex-wrap items-center justify-between gap-2 px-1">
             <div class="flex items-center gap-2">
               <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-              <span id="engine-user-title" class="text-xs font-extrabold uppercase tracking-wider text-forest-800">MOTOR NUTRICIONAL EM TEMPO REAL (TACO 4ª ED. / TBCA)</span>
+              <span id="engine-user-title" class="text-xs font-extrabold uppercase tracking-wider text-forest-800">PLANO NUTRICIONAL PERSONALIZADO</span>
             </div>
             <div id="tmb-get-badge" class="text-xs font-semibold text-slate-600 bg-white px-3 py-1 rounded-full border border-bordersoft shadow-2xs">
               TMB (Mifflin-St Jeor): <strong>1.968 kcal</strong> &bull; Gasto Total (GET): <strong>3.050 kcal</strong>
@@ -2600,7 +2600,7 @@
       const p = appState.profile;
       const proj = t.projection;
 
-      const userLabel = p.name ? `PLANO PERSONALIZADO DE ${p.name.toUpperCase()} (TACO 4ª ED. / TBCA)` : 'MOTOR NUTRICIONAL EM TEMPO REAL (TACO 4ª ED. / TBCA)';
+      const userLabel = p.name ? `PLANO PERSONALIZADO DE ${p.name.toUpperCase()}` : 'PLANO NUTRICIONAL PERSONALIZADO';
       document.getElementById('engine-user-title').textContent = userLabel;
       document.getElementById('tmb-get-badge').innerHTML = `TMB (Mifflin-St Jeor): <strong>${t.tmb.toLocaleString('pt-BR')} kcal</strong> &bull; Gasto Total (GET): <strong>${t.get.toLocaleString('pt-BR')} kcal</strong>`;
 
@@ -3043,9 +3043,9 @@
       const p = appState.profile;
       const t = appState.targets;
       const proj = t.projection;
-      const headerName = p.name ? ` — ${p.name}` : '';
+      const headerTitle = p.name ? `PLANO PERSONALIZADO DE ${p.name.toUpperCase()}` : 'PLANO NUTRICIONAL PERSONALIZADO';
       let lines = [
-        `🥗 *NUTRIBASIC PRO${headerName.toUpperCase()} (TACO / TBCA)*`,
+        `🥗 *${headerTitle}*`,
         `📊 *Perfil:* ${p.age} anos | ${p.height} cm | Peso Atual: ${p.weight} kg | Peso Meta: ${proj.goalWeight} kg`,
         `🎯 *Projeção:* Eliminar ${proj.deltaKg.toFixed(1)} kg (-${proj.weeklyRateKg.toFixed(2)} kg/sem) • Prazo: ~${proj.weeksEstimated} sem (${proj.targetDateFormatted})`,
         `🔥 *Metas Treino:* ${t.train.kcal} kcal (${t.train.p}g P | ${t.train.c}g C | ${t.train.f}g G)`,
@@ -3177,7 +3177,7 @@
         <div style="background:#1b4336; color:#fff; padding:11px 14px; border-radius:7px; margin-bottom:10px;">
           <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
             <div>
-              <div style="font-size:13pt; font-weight:800; letter-spacing:-0.3px;">NutriBasic PRO — Planejamento Nutricional (TACO / TBCA)</div>
+              <div style="font-size:13pt; font-weight:800; letter-spacing:-0.3px;">${p.name ? `Plano Personalizado de ${p.name}` : 'Plano Nutricional Personalizado'}</div>
               <div style="font-size:8.5pt; color:#d6ebe1; margin-top:2px;">${subtitle}</div>
             </div>
             <div style="background:rgba(255,255,255,0.14); padding:4px 9px; border-radius:6px; font-size:8pt; font-weight:bold; white-space:nowrap;">
@@ -3340,7 +3340,7 @@
         doc.setTextColor(255, 255, 255);
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(8.5);
-        doc.text(`NutriBasic PRO — Cardapio Semanal (TACO / TBCA) ${p.name ? '• ' + p.name : ''}`, margin + 3, y + 5.3);
+        doc.text(p.name ? `Plano Personalizado de ${p.name}` : 'Plano Nutricional Personalizado', margin + 3, y + 5.3);
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(7.5);
         doc.text(`Treino: ${t.train.kcal} kcal (${t.train.p}g P | ${t.train.c}g C | ${t.train.f}g G) • Meta: ${proj.goalWeight} kg`, pageW - margin - 3, y + 5.3, { align: 'right' });
@@ -3353,7 +3353,7 @@
       doc.setTextColor(255, 255, 255);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(13);
-      doc.text('NutriBasic PRO — Planejamento Nutricional (TACO / TBCA)', margin + 4, y + 7);
+      doc.text(p.name ? `Plano Personalizado de ${p.name}` : 'Plano Nutricional Personalizado', margin + 4, y + 7);
 
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(8.3);
