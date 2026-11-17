@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nutribasic-v3';
+const CACHE_NAME = 'nutribasic-v4';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

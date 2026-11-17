@@ -1,256 +1,630 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>NutriBasic</title>
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#1b4336">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <style>
-    * { box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; background-color: #f6f8f7; color: #1f2926; }
-    header { background-color: #1b4336; color: white; padding: 20px 15px; text-align: center; border-bottom: 4px solid #2b6653; }
-    header h1 { margin: 0; font-size: 24px; }
-    header p { margin: 5px 0 0 0; font-size: 14px; color: #a9cfc2; }
-    .container { padding: 15px; padding-bottom: 80px; }
-    .card { background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-    .card h3 { margin-top: 0; color: #1b4336; border-bottom: 1px solid #eee; padding-bottom: 10px; font-size: 16px; }
-    
-    label { display: block; font-size: 14px; font-weight: bold; margin-top: 10px; color: #495954; }
-    input, select { width: 100%; padding: 12px; margin-top: 5px; border-radius: 8px; border: 1px solid #cfdcd7; font-size: 16px; background: #fafcfb; }
-    button.btn-primary { width: 100%; background: #2b6653; color: white; border: none; padding: 14px; border-radius: 8px; font-size: 16px; font-weight: bold; margin-top: 15px; cursor: pointer; transition: 0.2s; }
-    button.btn-primary:active { background: #1b4336; transform: scale(0.98); }
-    button.btn-secondary { background: #e4efe9; color: #1b4336; border: none; padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: bold; margin-top: 10px; cursor: pointer; width: 100%; }
-    
-    .macro-grid { display: flex; gap: 10px; margin-top: 10px; }
-    .macro-box { flex: 1; background: #e4efe9; padding: 10px 5px; border-radius: 8px; text-align: center; }
-    .macro-box strong { display: block; font-size: 18px; color: #16362b; }
-    .macro-box span { font-size: 12px; color: #495954; text-transform: uppercase; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>NutriBasic — Gerador Inteligente de Cardápios e Meal Prep</title>
+  
+  <!-- PWA Meta Tags -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#1b4336" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
-    .refeicao { border-bottom: 1px solid #eee; padding: 12px 0; }
-    .refeicao:last-child { border-bottom: none; }
-    .refeicao strong { display: block; color: #2b6653; margin-bottom: 4px; }
-    .refeicao p { margin: 0; font-size: 14px; color: #333; line-height: 1.4; }
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Google Font: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            forest: { 900: '#143329', 800: '#1b4336', 700: '#2b6653', 600: '#357a64', 100: '#e6f0ec', 50: '#f2f7f5' },
+            slateblue: { 800: '#2d4452', 700: '#3d5a6c', 600: '#4e7187', 100: '#e8eff3', 50: '#f3f7f9' },
+            surface: '#f6f8f7', bordersoft: '#d3dfda',
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #f6f8f7; color: #1a2622; -webkit-tap-highlight-color: transparent; }
+    .tabular-nums { font-variant-numeric: tabular-nums; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    input[type="range"] { accent-color: #2b6653; }
   </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col">
 
-  <header>
-    <h1>NutriBasic</h1>
-    <p>Cardápios & Meal Prep</p>
-  </header>
-
-  <div class="container">
-    
-    <!-- Painel de Perfil -->
-    <div class="card">
-      <h3>1. Ajustar Perfil</h3>
-      <label>Seu Peso (kg):</label>
-      <input type="number" id="inputPeso" value="106">
-      
-      <label>Objetivo Atual:</label>
-      <select id="inputObjetivo">
-        <option value="perder">Perder Gordura (Déficit)</option>
-        <option value="manter">Manutenção (Foco em Massa)</option>
-      </select>
-      
-      <button class="btn-primary" onclick="recalcularMetas()">Recalcular Metas</button>
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 hidden transform transition-all duration-300 translate-y-2 opacity-0">
+    <div class="bg-forest-800 text-white px-4 py-3 rounded-xl shadow-lg border border-forest-600 flex items-center gap-3 text-sm font-medium">
+      <svg class="w-5 h-5 text-emerald-300 shrink-0" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+      </svg>
+      <span id="toast-msg">Ação concluída!</span>
     </div>
-
-    <!-- Metas Dinâmicas -->
-    <div class="card">
-      <h3>2. Metas Diárias</h3>
-      <div class="macro-grid">
-        <div class="macro-box">
-          <strong id="visorKcal">2351</strong>
-          <span>Kcal</span>
-        </div>
-        <div class="macro-box">
-          <strong id="visorProt">225g</strong>
-          <span>Prot</span>
-        </div>
-        <div class="macro-box">
-          <strong id="visorCarb">239g</strong>
-          <span>Carb</span>
-        </div>
-        <div class="macro-box">
-          <strong id="visorGord">55g</strong>
-          <span>Gord</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Cardápio Interativo -->
-    <div class="card">
-      <h3>3. Cardápio do Dia (Treino)</h3>
-      
-      <div class="refeicao">
-        <strong>07h00 - Café da Manhã</strong>
-        <p>4 ovos inteiros mexidos (sem azeite) + 120g cuscuz de milho cozido + café preto.</p>
-        <button class="btn-secondary" onclick="trocarRefeicao('Café da Manhã')">🔄 Trocar Refeição</button>
-      </div>
-
-      <div class="refeicao">
-        <strong>12h30 - Almoço</strong>
-        <p>180g peito de frango + 150g arroz + 100g feijão + salada à vontade.</p>
-        <button class="btn-secondary" onclick="trocarRefeicao('Almoço')">🔄 Trocar Refeição</button>
-      </div>
-      
-      <div class="refeicao">
-        <strong>16h30 - Pós-Treino</strong>
-        <p>30g Whey Protein + 250ml leite desnatado + 1 banana média.</p>
-        <button class="btn-secondary" onclick="trocarRefeicao('Pós-Treino')">🔄 Trocar Refeição</button>
-      </div>
-    </div>
-
   </div>
 
-  <script>
-    // ----- ESTADO GLOBAL E METAS -----
-    const state = {
-        peso: 106,
-        objetivo: 'perder',
-        treino_horario: '15h',
-        treino_dias: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex'],
-        proteina_kg: 2.1
-    };
-
-    function calcularMetas() {
-        // Cálculo base de macronutrientes (Dias de Treino)
-        const prot = Math.round(state.peso * state.proteina_kg);
-        const kcal = state.objetivo === 'perder' ? Math.round(state.peso * 22) : Math.round(state.peso * 26);
-        const gord = Math.round(state.peso * 0.55);
-        const carb = Math.round((kcal - (prot * 4) - (gord * 9)) / 4);
-
-        // Atualiza UI
-        document.getElementById('meta-kcal').textContent = kcal.toLocaleString('pt-BR');
-        document.getElementById('meta-prot').textContent = prot + 'g';
-        document.getElementById('meta-prot-kg').textContent = state.proteina_kg.toFixed(2) + ' g/kg';
-        document.getElementById('meta-carb').textContent = carb + 'g';
-        document.getElementById('meta-gord').textContent = gord + 'g';
-        
-        // Atualiza a meta de hidratação (35ml a 40ml por kg)
-        const aguaMin = (state.peso * 0.035).toFixed(1);
-        const aguaMax = (state.peso * 0.040).toFixed(1);
-        document.getElementById('meta-agua').textContent = `${aguaMin} a ${aguaMax} L`;
-    }
-
-    // ----- TRACKER DE HIDRATAÇÃO -----
-    let garrafasConsumidas = 0;
-    const maxGarrafas = 8; // 8 garrafas de 500ml = 4L
-    const waterTrackerHtml = Array(maxGarrafas).fill('<button class="water-btn" onclick="toggleWater(this)"></button>').join('');
-    document.getElementById('water-tracker').innerHTML = waterTrackerHtml;
-
-    window.toggleWater = function(btn) {
-        if (btn.classList.contains('active')) {
-            btn.classList.remove('active');
-            garrafasConsumidas--;
-        } else {
-            btn.classList.add('active');
-            garrafasConsumidas++;
-        }
-        atualizarTextoAgua();
-    };
-
-    window.zerarAgua = function() {
-        garrafasConsumidas = 0;
-        document.querySelectorAll('.water-btn').forEach(btn => btn.classList.remove('active'));
-        atualizarTextoAgua();
-    };
-
-    function atualizarTextoAgua() {
-        const litros = (garrafasConsumidas * 0.5).toFixed(1);
-        document.getElementById('water-status').textContent = `Registrado hoje: ${litros} L (${garrafasConsumidas}/${maxGarrafas} garrafas 500ml)`;
-    }
-
-    // ----- NAVEGAÇÃO DE TABS -----
-    window.openTab = function(evt, tabName) {
-        let i, tabcontent, tablinks;
-        tabcontent = document.getElementsByClassName("tab-content");
-        for (i = 0; i < tabcontent.length; i++) {
-            tabcontent[i].classList.remove("active");
-        }
-        tablinks = document.getElementsByClassName("tab-btn");
-        for (i = 0; i < tablinks.length; i++) {
-            tablinks[i].classList.remove("active");
-        }
-        document.getElementById(tabName).classList.add("active");
-        evt.currentTarget.classList.add("active");
-    };
-
-    // ----- MOCK DO CARDÁPIO -----
-    // Popula o cardápio da segunda-feira como exemplo inicial
-    const segundaFeiraHtml = `
-      <div class="day-card p-4">
-          <div class="flex justify-between items-center mb-3">
-              <h3 class="font-bold text-gray-800">SEGUNDA-FEIRA</h3>
-              <span class="bg-nutri-dark text-white text-xs px-2 py-1 rounded">Dia de Treino</span>
+  <!-- Header -->
+  <header class="bg-forest-800 text-white shadow-md sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-forest-700 border border-forest-600 flex items-center justify-center shadow-inner">
+          <svg class="w-6 h-6 text-emerald-200" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg sm:text-xl font-extrabold tracking-tight leading-none">NutriBasic</h1>
+            <span class="text-[11px] font-semibold uppercase tracking-wider bg-forest-700 text-emerald-200 px-2 py-0.5 rounded-full border border-forest-600">Pro</span>
           </div>
-          <div class="border-t border-gray-200 pt-3">
-              <div class="mb-4">
-                  <div class="flex justify-between">
-                      <strong class="text-nutri-dark text-sm">07h00 • Café da Manhã</strong>
-                      <span class="text-xs text-gray-500 font-bold">417 kcal</span>
-                  </div>
-                  <p class="text-sm text-gray-600 mt-1">4 ovos inteiros mexidos (sem azeite) + 120g cuscuz de milho + café preto sem açúcar.</p>
-                  <button class="text-xs text-blue-600 mt-1" onclick="alert('Funcionalidade de troca em breve!')">🔄 Trocar Refeição</button>
-              </div>
-               <div class="mb-4">
-                  <div class="flex justify-between">
-                      <strong class="text-nutri-dark text-sm">10h00 • Lanche (Rua)</strong>
-                      <span class="text-xs text-gray-500 font-bold">394 kcal</span>
-                  </div>
-                  <p class="text-sm text-gray-600 mt-1">1 pote Overnight Oats (50g aveia + 30g Whey + 150ml leite) + 80g morangos.</p>
-                  <button class="text-xs text-blue-600 mt-1" onclick="alert('Funcionalidade de troca em breve!')">🔄 Trocar Refeição</button>
-              </div>
-              <div class="mb-4">
-                  <div class="flex justify-between">
-                      <strong class="text-nutri-dark text-sm">12h30 • Almoço (Buffet)</strong>
-                      <span class="text-xs text-gray-500 font-bold">546 kcal</span>
-                  </div>
-                  <p class="text-sm text-gray-600 mt-1">180g peito de frango + 150g arroz + 100g feijão + salada sem azeite.</p>
-                  <button class="text-xs text-blue-600 mt-1" onclick="alert('Funcionalidade de troca em breve!')">🔄 Trocar Refeição</button>
-              </div>
-              <div class="mb-4 bg-gray-100 p-2 rounded border border-gray-200">
-                  <div class="flex justify-between">
-                      <strong class="text-nutri-dark text-sm">14h30 • Pré-Treino</strong>
-                      <span class="text-xs text-gray-500 font-bold">216 kcal</span>
-                  </div>
-                  <p class="text-sm text-gray-600 mt-1">1 banana grande (110g) + 15g pasta de amendoim integral.</p>
-              </div>
-              <div class="mb-4 bg-gray-100 p-2 rounded border border-gray-200">
-                  <div class="flex justify-between">
-                      <strong class="text-nutri-dark text-sm">16h30 • Pós-Treino</strong>
-                      <span class="text-xs text-gray-500 font-bold">294 kcal</span>
-                  </div>
-                  <p class="text-sm text-gray-600 mt-1">30g Whey Protein + 250ml leite desnatado gelado + 1 banana média (85g).</p>
-              </div>
-              <div class="mb-2">
-                  <div class="flex justify-between">
-                      <strong class="text-nutri-dark text-sm">20h00 • Jantar (Casa)</strong>
-                      <span class="text-xs text-gray-500 font-bold">484 kcal</span>
-                  </div>
-                  <p class="text-sm text-gray-600 mt-1">180g músculo bovino cozido + 120g arroz + legumes no vapor + 1 fio de azeite.</p>
-                  <button class="text-xs text-blue-600 mt-1" onclick="alert('Funcionalidade de troca em breve!')">🔄 Trocar Refeição</button>
-              </div>
-          </div>
+          <p class="text-xs text-emerald-100/80 mt-0.5">Motor Nutricional Inteligente</p>
+        </div>
       </div>
-    `;
-    document.getElementById('cardapio-dias').innerHTML = segundaFeiraHtml;
+      <div class="flex items-center gap-2">
+        <button id="toggle-config-btn" type="button" onclick="toggleConfigPanel()" class="lg:hidden inline-flex items-center gap-1.5 bg-forest-700 hover:bg-forest-600 text-white text-xs font-semibold px-3 py-2.5 rounded-xl border border-forest-600 transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
+          <span>Perfil</span>
+        </button>
+      </div>
+    </div>
+  </header>
 
-    // ----- SERVICE WORKER -----
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./service-worker.js')
-          .then(reg => console.log('Service Worker registrado com sucesso!'))
-          .catch(err => console.log('Erro no Service Worker:', err));
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-5">
+    <!-- Metas Dashboard -->
+    <section aria-label="Resumo Nutricional" class="mb-6">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-forest-700"></span>
+          <h2 class="text-xs font-bold uppercase tracking-wider text-forest-800">Motor Nutricional em Tempo Real</h2>
+        </div>
+        <div class="text-xs text-slate-600 bg-white px-3 py-1 rounded-full border border-bordersoft tabular-nums">
+          TMB: <strong id="display-bmr" class="text-forest-800">...</strong> &bull; GET: <strong id="display-tdee" class="text-forest-800">...</strong>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Train Card -->
+        <div class="bg-white rounded-2xl border border-bordersoft shadow-sm overflow-hidden flex flex-col justify-between">
+          <div class="bg-forest-800 text-white px-4 py-2.5 flex items-center justify-between">
+            <span class="text-xs font-bold uppercase tracking-wider">Dias de Treino (Seg a Sex)</span>
+            <span class="text-[11px] bg-forest-700 px-2 py-0.5 rounded-full font-medium" id="badge-goal-label">Recomposição</span>
+          </div>
+          <div class="p-4">
+            <div class="flex items-baseline justify-between mb-3">
+              <div class="text-2xl sm:text-3xl font-extrabold text-forest-800 tabular-nums" id="summary-train-kcal">...</div>
+              <div class="text-xs font-semibold text-forest-700 bg-forest-50 px-2.5 py-1 rounded-lg border border-forest-100 tabular-nums" id="summary-train-delta">...</div>
+            </div>
+            <div class="grid grid-cols-3 gap-2 pt-2.5 border-t border-slate-100 text-center">
+              <div class="bg-forest-50/70 rounded-xl p-2">
+                <div class="text-[11px] font-medium text-slate-500">Proteína</div>
+                <div class="text-sm font-extrabold text-forest-800 tabular-nums" id="summary-train-p">...</div>
+                <div class="text-[10px] font-semibold text-forest-700 tabular-nums" id="summary-train-pkg">...</div>
+              </div>
+              <div class="bg-slate-50 rounded-xl p-2">
+                <div class="text-[11px] font-medium text-slate-500">Carboidrato</div>
+                <div class="text-sm font-extrabold text-slate-800 tabular-nums" id="summary-train-c">...</div>
+              </div>
+              <div class="bg-slate-50 rounded-xl p-2">
+                <div class="text-[11px] font-medium text-slate-500">Gordura</div>
+                <div class="text-sm font-extrabold text-slate-800 tabular-nums" id="summary-train-f">...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Rest Card -->
+        <div class="bg-white rounded-2xl border border-bordersoft shadow-sm overflow-hidden flex flex-col justify-between">
+          <div class="bg-slateblue-700 text-white px-4 py-2.5 flex items-center justify-between">
+            <span class="text-xs font-bold uppercase tracking-wider">Dias de Descanso (Sáb e Dom)</span>
+            <span class="text-[11px] bg-slateblue-800 px-2 py-0.5 rounded-full font-medium">Carb Cycling</span>
+          </div>
+          <div class="p-4">
+            <div class="flex items-baseline justify-between mb-3">
+              <div class="text-2xl sm:text-3xl font-extrabold text-slateblue-700 tabular-nums" id="summary-rest-kcal">...</div>
+              <div class="text-xs font-semibold text-slateblue-700 bg-slateblue-50 px-2.5 py-1 rounded-lg border border-slateblue-100">Queima Ativa</div>
+            </div>
+            <div class="grid grid-cols-3 gap-2 pt-2.5 border-t border-slate-100 text-center">
+              <div class="bg-slateblue-50/80 rounded-xl p-2">
+                <div class="text-[11px] font-medium text-slate-500">Proteína</div>
+                <div class="text-sm font-extrabold text-slateblue-700 tabular-nums" id="summary-rest-p">...</div>
+                <div class="text-[10px] font-semibold text-slateblue-600 tabular-nums" id="summary-rest-pkg">...</div>
+              </div>
+              <div class="bg-slate-50 rounded-xl p-2">
+                <div class="text-[11px] font-medium text-slate-500">Carboidrato</div>
+                <div class="text-sm font-extrabold text-slate-800 tabular-nums" id="summary-rest-c">...</div>
+              </div>
+              <div class="bg-slate-50 rounded-xl p-2">
+                <div class="text-[11px] font-medium text-slate-500">Gordura</div>
+                <div class="text-sm font-extrabold text-slate-800 tabular-nums" id="summary-rest-f">...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Layout Dividido -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      
+      <!-- LADO ESQUERDO: Configurações -->
+      <aside id="config-panel" class="hidden lg:block lg:col-span-4 bg-white rounded-2xl border border-bordersoft shadow-sm overflow-hidden">
+        <div class="bg-forest-800 text-white px-4 py-3.5 flex items-center justify-between">
+          <h2 class="text-sm font-bold tracking-tight">Perfil & Despensa</h2>
+          <button type="button" onclick="toggleConfigPanel()" class="lg:hidden text-xs bg-forest-700 px-2.5 py-1 rounded-lg">Fechar</button>
+        </div>
+        <form id="profile-form" onsubmit="handleGeneratePlan(event)" class="p-4 space-y-5">
+          <!-- Dados base -->
+          <div>
+            <div class="grid grid-cols-2 gap-2.5">
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Peso (kg)</label>
+                <input id="input-weight" type="number" step="0.5" value="106" class="w-full rounded-xl border border-bordersoft bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-forest-700" />
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-600 mb-1">Proteína (g/kg)</label>
+                <input id="input-protein-ratio" type="number" step="0.1" value="2.1" class="w-full rounded-xl border border-bordersoft bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-forest-700" />
+              </div>
+              <div class="col-span-2">
+                <label class="block text-xs font-medium text-slate-600 mb-1">Objetivo Principal</label>
+                <select id="input-goal" class="w-full rounded-xl border border-bordersoft bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-forest-700">
+                  <option value="cut">Emagrecimento (Déficit)</option>
+                  <option value="recomp" selected>Recomposição Corporal</option>
+                  <option value="bulk">Hipertrofia Limpa</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <!-- Despensa Reativa -->
+          <div class="pt-3 border-t border-slate-100">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-forest-800 mb-2">Despensa (Filtro Imediato)</h3>
+            <p class="text-[11px] text-slate-500 mb-2.5">Desmarque para excluir do cardápio e recalcular opções:</p>
+            <div id="pantry-chips-container" class="flex flex-wrap gap-1.5">
+              <!-- Gerado via JS -->
+            </div>
+          </div>
+          <button type="submit" class="w-full bg-forest-800 hover:bg-forest-700 text-white font-bold text-sm py-3 px-4 rounded-xl shadow-md transition">
+            Recalcular Tudo
+          </button>
+        </form>
+      </aside>
+
+      <!-- LADO DIREITO: Cardápio Dinâmico -->
+      <div class="lg:col-span-8">
+        <div class="bg-white p-3 rounded-2xl border border-bordersoft shadow-sm mb-4 flex overflow-x-auto no-scrollbar gap-1.5" id="day-selector-bar">
+          <!-- Gerado via JS -->
+        </div>
+        <div id="menu-render-area" class="space-y-4">
+          <!-- Cardápio inserido dinamicamente aqui -->
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    /* ==========================================================================
+       1. BANCO DE DADOS INTERNO (JSON: Despensa e Receitas)
+       ========================================================================== */
+    const PANTRY_CATALOG = [
+      { key: 'arroz', label: 'Arroz' },
+      { key: 'feijao', label: 'Feijão' },
+      { key: 'macarrao', label: 'Macarrão' },
+      { key: 'frango', label: 'Peito de Frango' },
+      { key: 'patinho', label: 'Patinho Moído' },
+      { key: 'file_suino', label: 'Filé Suíno' },
+      { key: 'musculo', label: 'Músculo Bovino' },
+      { key: 'ovos', label: 'Ovos Inteiros' },
+      { key: 'cuscuz', label: 'Cuscuz de Milho' },
+      { key: 'aveia', label: 'Aveia' },
+      { key: 'pao_integral', label: 'Pão Integral' },
+      { key: 'batata_doce', label: 'Batata-Doce' },
+      { key: 'whey', label: 'Whey Protein' },
+      { key: 'leite', label: 'Leite' },
+      { key: 'banana', label: 'Banana' }
+    ];
+
+    // BANCO DE RECEITAS INTELIGENTE (Títulos genéricos, quantidades base genéricas)
+    const RECIPES = [
+      // CAFÉ DA MANHÃ
+      {
+        id: 'bf_ovos_cuscuz',
+        name: 'Ovos Inteiros Mexidos com Cuscuz',
+        slots: ['breakfast'],
+        required: ['ovos', 'cuscuz'],
+        items: [
+          { key: 'ovos', name: 'Ovos inteiros mexidos (sem azeite)', unit: 'un', role: 'protein', p: 6.3, c: 0.6, f: 5.0, kcal: 73, min: 2, max: 6, base: 3 },
+          { key: 'cuscuz', name: 'Cuscuz de milho cozido', unit: 'g', role: 'carb', p: 0.02, c: 0.25, f: 0.004, kcal: 1.12, min: 50, max: 200, base: 100 }
+        ]
+      },
+      {
+        id: 'bf_ovos_pao',
+        name: 'Ovos Inteiros Mexidos com Pão Integral',
+        slots: ['breakfast'],
+        required: ['ovos', 'pao_integral'],
+        items: [
+          { key: 'ovos', name: 'Ovos inteiros mexidos (sem azeite)', unit: 'un', role: 'protein', p: 6.3, c: 0.6, f: 5.0, kcal: 73, min: 2, max: 6, base: 3 },
+          { key: 'pao_integral', name: 'Pão integral em fatias', unit: 'g', role: 'carb', p: 0.09, c: 0.44, f: 0.03, kcal: 2.4, min: 25, max: 100, base: 50 }
+        ]
+      },
+      {
+        id: 'bf_panqueca',
+        name: 'Panqueca de Aveia e Ovos',
+        slots: ['breakfast'],
+        required: ['ovos', 'aveia'],
+        items: [
+          { key: 'ovos', name: 'Ovos inteiros na massa', unit: 'un', role: 'protein', p: 6.3, c: 0.6, f: 5.0, kcal: 73, min: 2, max: 6, base: 3 },
+          { key: 'aveia', name: 'Aveia em flocos', unit: 'g', role: 'carb', p: 0.14, c: 0.66, f: 0.07, kcal: 3.8, min: 30, max: 80, base: 45 }
+        ]
+      },
+      
+      // LANCHES
+      {
+        id: 'sn_shake',
+        name: 'Shake de Whey e Aveia',
+        slots: ['snack', 'pre', 'post'],
+        required: ['whey', 'aveia', 'leite'],
+        items: [
+          { key: 'whey', name: 'Whey Protein', unit: 'g', role: 'protein', p: 0.8, c: 0.08, f: 0.05, kcal: 3.9, min: 20, max: 50, base: 30 },
+          { key: 'aveia', name: 'Aveia em flocos', unit: 'g', role: 'carb', p: 0.14, c: 0.66, f: 0.07, kcal: 3.8, min: 20, max: 60, base: 40 },
+          { key: 'leite', name: 'Leite desnatado', unit: 'ml', role: 'fixed', p: 0.03, c: 0.05, f: 0, kcal: 0.34, min: 150, max: 250, base: 200 }
+        ]
+      },
+      {
+        id: 'sn_frango_pao',
+        name: 'Sanduíche Natural de Frango',
+        slots: ['snack', 'pre'],
+        required: ['frango', 'pao_integral'],
+        items: [
+          { key: 'frango', name: 'Frango desfiado temperado', unit: 'g', role: 'protein', p: 0.31, c: 0, f: 0.03, kcal: 1.5, min: 80, max: 180, base: 120 },
+          { key: 'pao_integral', name: 'Pão integral', unit: 'g', role: 'carb', p: 0.09, c: 0.44, f: 0.03, kcal: 2.4, min: 25, max: 100, base: 50 }
+        ]
+      },
+
+      // ALMOÇOS E JANTARES
+      {
+        id: 'ln_frango_arroz_feijao',
+        name: 'Peito de Frango com Arroz e Feijão',
+        slots: ['lunch', 'dinner'],
+        required: ['frango', 'arroz', 'feijao'],
+        items: [
+          { key: 'frango', name: 'Peito de frango grelhado', unit: 'g', role: 'protein', p: 0.31, c: 0, f: 0.03, kcal: 1.5, min: 100, max: 250, base: 150 },
+          { key: 'arroz', name: 'Arroz cozido', unit: 'g', role: 'carb', p: 0.025, c: 0.28, f: 0.003, kcal: 1.28, min: 80, max: 250, base: 150 },
+          { key: 'feijao', name: 'Feijão cozido', unit: 'g', role: 'fixed', p: 0.048, c: 0.14, f: 0.005, kcal: 0.76, min: 80, max: 120, base: 100 }
+        ]
+      },
+      {
+        id: 'ln_patinho_batata',
+        name: 'Patinho Moído com Batata-Doce',
+        slots: ['lunch', 'dinner'],
+        required: ['patinho', 'batata_doce'],
+        items: [
+          { key: 'patinho', name: 'Patinho moído refogado', unit: 'g', role: 'protein', p: 0.32, c: 0, f: 0.07, kcal: 1.9, min: 100, max: 250, base: 150 },
+          { key: 'batata_doce', name: 'Batata-doce cozida', unit: 'g', role: 'carb', p: 0.016, c: 0.20, f: 0.001, kcal: 0.86, min: 100, max: 300, base: 150 }
+        ]
+      },
+      {
+        id: 'ln_suino_macarrao',
+        name: 'Filé Suíno Grelhado com Macarrão',
+        slots: ['lunch', 'dinner'],
+        required: ['file_suino', 'macarrao'],
+        items: [
+          { key: 'file_suino', name: 'Filé mignon suíno grelhado', unit: 'g', role: 'protein', p: 0.28, c: 0, f: 0.04, kcal: 1.5, min: 100, max: 250, base: 150 },
+          { key: 'macarrao', name: 'Macarrão cozido ao sugo', unit: 'g', role: 'carb', p: 0.045, c: 0.28, f: 0.008, kcal: 1.38, min: 80, max: 250, base: 150 }
+        ]
+      },
+      {
+        id: 'ln_musculo_arroz',
+        name: 'Músculo Desfiado com Arroz e Feijão',
+        slots: ['lunch', 'dinner'],
+        required: ['musculo', 'arroz', 'feijao'],
+        items: [
+          { key: 'musculo', name: 'Músculo bovino desfiado', unit: 'g', role: 'protein', p: 0.30, c: 0, f: 0.05, kcal: 1.7, min: 100, max: 250, base: 150 },
+          { key: 'arroz', name: 'Arroz cozido', unit: 'g', role: 'carb', p: 0.025, c: 0.28, f: 0.003, kcal: 1.28, min: 80, max: 250, base: 150 },
+          { key: 'feijao', name: 'Feijão cozido', unit: 'g', role: 'fixed', p: 0.048, c: 0.14, f: 0.005, kcal: 0.76, min: 80, max: 120, base: 100 }
+        ]
+      },
+      {
+        id: 'ln_omelete_arroz',
+        name: 'Omelete Rápida com Arroz',
+        slots: ['lunch', 'dinner'],
+        required: ['ovos', 'arroz'],
+        items: [
+          { key: 'ovos', name: 'Ovos inteiros batidos', unit: 'un', role: 'protein', p: 6.3, c: 0.6, f: 5.0, kcal: 73, min: 2, max: 6, base: 3 },
+          { key: 'arroz', name: 'Arroz cozido', unit: 'g', role: 'carb', p: 0.025, c: 0.28, f: 0.003, kcal: 1.28, min: 80, max: 250, base: 150 }
+        ]
+      }
+    ];
+
+    const DAYS = [
+      { id: 'seg', name: 'Segunda', workout: true },
+      { id: 'ter', name: 'Terça', workout: true },
+      { id: 'qua', name: 'Quarta', workout: true },
+      { id: 'qui', name: 'Quinta', workout: true },
+      { id: 'sex', name: 'Sexta', workout: true },
+      { id: 'sab', name: 'Sábado', workout: false },
+      { id: 'dom', name: 'Domingo', workout: false }
+    ];
+
+    /* ==========================================================================
+       2. LÓGICA DE ESTADO
+       ========================================================================== */
+    let appState = {
+      weight: 106,
+      proteinRatio: 2.1,
+      goal: 'recomp', // cut, recomp, bulk
+      pantry: {}, // Preenchido dinamicamente no init
+      plan: {},
+      selectedDay: 'seg'
+    };
+
+    function init() {
+      // Inicia a despensa toda marcada
+      PANTRY_CATALOG.forEach(i => { appState.pantry[i.key] = true; });
+      generatePlan();
+      renderUI();
+    }
+
+    /* ==========================================================================
+       3. MOTOR MATEMÁTICO (Cálculo Inverso)
+       ========================================================================== */
+    function calcDailyTargets() {
+      const w = appState.weight;
+      const bmr = (10 * w) + (6.25 * 182) - (5 * 42) + 5; // Form. Homem Mifflin
+      const tdee = Math.round(bmr * 1.55); // Fator atividade
+
+      let factor = appState.goal === 'cut' ? 0.70 : (appState.goal === 'bulk' ? 1.1 : 0.80);
+      let trainKcal = Math.round(tdee * factor);
+      let restKcal = Math.round(trainKcal * 0.88);
+
+      let p = Math.round(w * appState.proteinRatio);
+      let f = Math.round(w * 0.6);
+      let trainC = Math.round((trainKcal - (p*4) - (f*9)) / 4);
+      let restC = Math.round((restKcal - (p*4) - (f*9)) / 4);
+
+      return {
+        bmr, tdee,
+        train: { kcal: trainKcal, p, c: trainC, f },
+        rest:  { kcal: restKcal, p, c: restC, f }
+      };
+    }
+
+    function scaleRecipe(recipe, targetP, targetC) {
+      // Clona itens profundos
+      let items = JSON.parse(JSON.stringify(recipe.items));
+      let outP = 0, outC = 0, outF = 0, outKcal = 0;
+
+      // Escalar proteínas
+      let proteinItem = items.find(i => i.role === 'protein');
+      if (proteinItem) {
+        let neededQty = targetP / proteinItem.p;
+        if (proteinItem.unit === 'un') neededQty = Math.round(neededQty);
+        else neededQty = Math.round(neededQty / 10) * 10;
+        
+        neededQty = Math.max(proteinItem.min, Math.min(proteinItem.max, neededQty));
+        proteinItem.qty = neededQty;
+      }
+
+      // Descobrir quanto carboidrato a proteina já trouxe
+      let currentC = items.reduce((acc, it) => acc + ((it.qty || it.base) * it.c), 0);
+
+      // Escalar carboidratos principais para cobrir a diferença
+      let carbItem = items.find(i => i.role === 'carb');
+      if (carbItem) {
+        let missingC = targetC - currentC;
+        let neededQty = missingC > 0 ? (missingC / carbItem.c) : carbItem.min;
+        if (carbItem.unit === 'un') neededQty = Math.round(neededQty);
+        else neededQty = Math.round(neededQty / 10) * 10;
+        
+        neededQty = Math.max(carbItem.min, Math.min(carbItem.max, neededQty));
+        carbItem.qty = neededQty;
+      }
+
+      // Calcular totais finais
+      items.forEach(it => {
+        if(!it.qty) it.qty = it.base; // para roles fixed
+        outP += it.qty * it.p;
+        outC += it.qty * it.c;
+        outF += it.qty * it.f;
+        outKcal += it.qty * it.kcal;
+      });
+
+      return {
+        name: recipe.name,
+        items: items,
+        macros: { p: Math.round(outP), c: Math.round(outC), f: Math.round(outF), kcal: Math.round(outKcal) }
+      };
+    }
+
+    function generatePlan() {
+      const targets = calcDailyTargets();
+      
+      // Estrutura Fixa de Refeições no dia (5 refeições)
+      const slots = [
+        { id: 'breakfast', label: '07h00 • Café da Manhã', pShare: 0.20, cShare: 0.20 },
+        { id: 'snack', label: '10h00 • Lanche da Manhã', pShare: 0.15, cShare: 0.15 },
+        { id: 'lunch', label: '13h00 • Almoço Principal', pShare: 0.30, cShare: 0.30 },
+        { id: 'pre', label: '16h00 • Pré-Treino', pShare: 0.10, cShare: 0.15 },
+        { id: 'dinner', label: '20h00 • Jantar', pShare: 0.25, cShare: 0.20 },
+      ];
+
+      // Filtrar receitas disponíveis baseadas nos checkboxes da despensa!
+      const availableRecipes = RECIPES.filter(r => {
+        return r.required.every(reqItem => appState.pantry[reqItem] === true);
+      });
+
+      DAYS.forEach(day => {
+        appState.plan[day.id] = [];
+        const t = day.workout ? targets.train : targets.rest;
+
+        slots.forEach(slot => {
+          // Achar a primeira receita disponível para o tipo de refeição
+          let candidates = availableRecipes.filter(r => r.slots.includes(slot.id));
+          
+          // Fallback de emergência caso o usuário desmarque absolutamente tudo
+          if(candidates.length === 0) {
+             candidates = RECIPES.filter(r => r.slots.includes(slot.id)); 
+          }
+
+          // Pega a receita e calcula porções matemáticas
+          let chosenRecipe = candidates[0]; // Na vida real, poderia rotacionar com day.id
+          let mealData = scaleRecipe(chosenRecipe, t.p * slot.pShare, t.c * slot.cShare);
+          
+          appState.plan[day.id].push({
+            label: slot.label,
+            name: mealData.name,
+            items: mealData.items,
+            macros: mealData.macros
+          });
+        });
       });
     }
 
-    // Initialize
-    calcularMetas();
+    /* ==========================================================================
+       4. INTEGRAÇÃO COM A UI E EVENTOS
+       ========================================================================== */
+    function togglePantryItem(key) {
+      appState.pantry[key] = !appState.pantry[key];
+      // A mágica acontece aqui: recalcula e re-renderiza Imediatamente!
+      generatePlan();
+      renderUI();
+      showToast('Cardápio recalculado (ingrediente alterado)!');
+    }
+
+    function handleGeneratePlan(e) {
+      e.preventDefault();
+      appState.weight = parseFloat(document.getElementById('input-weight').value);
+      appState.proteinRatio = parseFloat(document.getElementById('input-protein-ratio').value);
+      appState.goal = document.getElementById('input-goal').value;
+      
+      generatePlan();
+      renderUI();
+      showToast('Novas metas corporais aplicadas!');
+      if(window.innerWidth < 1024) toggleConfigPanel();
+    }
+
+    function setDay(dayId) {
+      appState.selectedDay = dayId;
+      renderMenu();
+    }
+
+    function toggleConfigPanel() {
+      document.getElementById('config-panel').classList.toggle('hidden');
+    }
+
+    /* ==========================================================================
+       5. RENDERIZAÇÃO DA TELA (Vanilla JS Injetando HTML)
+       ========================================================================== */
+    function renderUI() {
+      // 1. Resumos no Topo
+      const t = calcDailyTargets();
+      document.getElementById('display-bmr').textContent = t.bmr + ' kcal';
+      document.getElementById('display-tdee').textContent = t.tdee + ' kcal';
+      
+      document.getElementById('summary-train-kcal').textContent = t.train.kcal + ' kcal';
+      document.getElementById('summary-train-p').textContent = t.train.p + 'g';
+      document.getElementById('summary-train-c').textContent = t.train.c + 'g';
+      document.getElementById('summary-train-f').textContent = t.train.f + 'g';
+      
+      document.getElementById('summary-rest-kcal').textContent = t.rest.kcal + ' kcal';
+      document.getElementById('summary-rest-p').textContent = t.rest.p + 'g';
+      document.getElementById('summary-rest-c').textContent = t.rest.c + 'g';
+      document.getElementById('summary-rest-f').textContent = t.rest.f + 'g';
+
+      // 2. Botões da Despensa (Pílulas Reativas)
+      const pantryContainer = document.getElementById('pantry-chips-container');
+      pantryContainer.innerHTML = PANTRY_CATALOG.map(item => {
+        const isActive = appState.pantry[item.key];
+        const style = isActive ? 'bg-forest-800 text-white border-forest-800' : 'bg-surface text-slate-500 border-bordersoft';
+        const icon = isActive ? '✓' : '+';
+        return `<button type="button" onclick="togglePantryItem('${item.key}')" class="px-2.5 py-1.5 rounded-xl text-xs font-semibold border transition flex items-center gap-1 ${style}"><span>${icon}</span> ${item.label}</button>`;
+      }).join('');
+
+      // 3. Abas de Dias
+      const daysBar = document.getElementById('day-selector-bar');
+      daysBar.innerHTML = DAYS.map(d => {
+        const isSel = appState.selectedDay === d.id;
+        const color = isSel ? 'bg-forest-800 text-white' : 'bg-surface text-slate-700 hover:bg-slate-100';
+        return `<button onclick="setDay('${d.id}')" class="px-4 py-2 rounded-xl text-sm font-bold border border-bordersoft shrink-0 ${color}">${d.name}</button>`;
+      }).join('');
+
+      // 4. Renderiza o Cardápio do dia selecionado
+      renderMenu();
+    }
+
+    function renderMenu() {
+      const area = document.getElementById('menu-render-area');
+      const meals = appState.plan[appState.selectedDay];
+      let totalP = 0, totalC = 0, totalF = 0, totalK = 0;
+
+      const html = meals.map(meal => {
+        totalP += meal.macros.p; totalC += meal.macros.c; totalF += meal.macros.f; totalK += meal.macros.kcal;
+        
+        const itemsList = meal.items.map(it => `
+          <div class="flex justify-between items-center text-sm py-1.5 border-b border-slate-100 last:border-none">
+            <span class="text-slate-700">${it.name}</span>
+            <span class="font-extrabold text-forest-900">${it.qty}${it.unit}</span>
+          </div>
+        `).join('');
+
+        return `
+          <div class="bg-white rounded-2xl border border-bordersoft p-4 shadow-sm">
+            <div class="flex justify-between items-start mb-3">
+              <div>
+                <span class="text-[11px] font-extrabold text-forest-800 bg-forest-100 px-2 py-0.5 rounded-md uppercase">${meal.label}</span>
+                <h4 class="text-base font-bold text-slate-900 mt-1">${meal.name}</h4>
+              </div>
+              <div class="text-right">
+                <div class="text-sm font-extrabold text-forest-800">${meal.macros.kcal} kcal</div>
+                <div class="text-[10px] text-slate-500 font-bold mt-1">P: ${meal.macros.p}g • C: ${meal.macros.c}g</div>
+              </div>
+            </div>
+            <div class="bg-surface rounded-xl p-3 border border-slate-100 mb-2">
+              ${itemsList}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      area.innerHTML = html + `
+        <div class="bg-forest-50 border border-forest-200 rounded-2xl px-4 py-3 flex flex-wrap items-center justify-between text-sm font-extrabold text-forest-900 mt-4">
+           <span>TOTAIS DO DIA</span>
+           <div class="flex gap-4">
+             <span>Prot: ${totalP}g</span>
+             <span>Carb: ${totalC}g</span>
+             <span>Kcal: ${totalK}</span>
+           </div>
+        </div>
+      `;
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-msg').textContent = msg;
+      toast.classList.remove('hidden');
+      setTimeout(() => { toast.classList.remove('translate-y-2', 'opacity-0'); }, 10);
+      setTimeout(() => { 
+        toast.classList.add('translate-y-2', 'opacity-0');
+        setTimeout(() => toast.classList.add('hidden'), 300);
+      }, 3000);
+    }
+
+    // Inicializa ao abrir
+    window.addEventListener('DOMContentLoaded', init);
+
+    // SERVICE WORKER SETUP
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js').catch(err => console.log(err));
+      });
+    }
   </script>
 </body>
 </html>
