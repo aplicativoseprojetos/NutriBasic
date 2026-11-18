@@ -373,12 +373,48 @@
 
           <!-- SEÇÃO 3: ESTILO DE ROTINA & PREPARO -->
           <div class="pt-3 border-t border-slate-100">
-            <div class="flex items-center gap-2 mb-2.5">
-              <span class="w-5 h-5 rounded-full bg-forest-100 text-forest-800 text-xs font-extrabold flex items-center justify-center">3</span>
-              <h3 class="text-xs font-bold uppercase tracking-wider text-forest-800 m-0">Estilo de Rotina &amp; Preparo</h3>
+            <div class="flex items-center justify-between mb-2.5">
+              <div class="flex items-center gap-2">
+                <span class="w-5 h-5 rounded-full bg-forest-100 text-forest-800 text-xs font-extrabold flex items-center justify-center">3</span>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-forest-800 m-0">Rotina &amp; Refeições por Dia</h3>
+              </div>
+              <span id="meals-count-sidebar-badge" class="text-[10px] font-bold text-forest-800 bg-forest-100 px-2 py-0.5 rounded-full">5 refeições/dia</span>
             </div>
 
-            <div class="space-y-2.5">
+            <div class="space-y-3">
+              <!-- Seletor Rápido de Quantidade de Refeições por Dia -->
+              <div class="bg-surface p-2.5 rounded-xl border border-bordersoft space-y-2">
+                <div class="flex items-center justify-between">
+                  <label class="block text-xs font-bold text-forest-800">🍽️ Quantas refeições quer fazer por dia?</label>
+                  <span class="text-[10px] font-semibold text-emerald-700">100% Macros Redistribuídos</span>
+                </div>
+
+                <div class="grid grid-cols-5 gap-1">
+                  <button type="button" onclick="applyMealCountPreset(3)" id="preset-meals-3" class="py-1.5 px-1 rounded-lg text-[11px] font-extrabold border border-bordersoft bg-white text-slate-700 hover:bg-forest-50 transition">
+                    3 Ref.
+                  </button>
+                  <button type="button" onclick="applyMealCountPreset(4)" id="preset-meals-4" class="py-1.5 px-1 rounded-lg text-[11px] font-extrabold border border-bordersoft bg-white text-slate-700 hover:bg-forest-50 transition">
+                    4 Ref.
+                  </button>
+                  <button type="button" onclick="applyMealCountPreset(5)" id="preset-meals-5" class="py-1.5 px-1 rounded-lg text-[11px] font-extrabold border border-forest-800 bg-forest-800 text-white transition">
+                    5 Ref.
+                  </button>
+                  <button type="button" onclick="applyMealCountPreset(6)" id="preset-meals-6" class="py-1.5 px-1 rounded-lg text-[11px] font-extrabold border border-bordersoft bg-white text-slate-700 hover:bg-forest-50 transition">
+                    6 Ref.
+                  </button>
+                  <button type="button" onclick="toggleCustomSlotsEditor()" id="preset-meals-custom" class="py-1.5 px-1 rounded-lg text-[11px] font-extrabold border border-bordersoft bg-white text-slate-700 hover:bg-forest-50 transition" title="Escolher quais refeições e horários">
+                    ⚙️ Ajustar
+                  </button>
+                </div>
+
+                <p class="text-[10px] text-slate-500 m-0 leading-snug">
+                  Escolha de <strong>3 a 6 refeições</strong> ou marque/desmarque abaixo quais refeições e horários cabem na sua rotina:
+                </p>
+
+                <!-- Lista Interativa de Refeições e Horários Editáveis -->
+                <div id="custom-meal-slots-list" class="space-y-1.5 pt-1"></div>
+              </div>
+
               <div>
                 <label class="block text-xs font-semibold text-slate-600 mb-1">Logística do Dia a Dia</label>
                 <select id="input-routine" onchange="onProfileInputChange()">
@@ -685,7 +721,12 @@
           <!-- ABA 1: CARDÁPIO SEMANAL -->
           <div id="tab-panel-menu" class="space-y-3">
             <div class="card-panel p-3 flex flex-wrap items-center justify-between gap-2">
-              <div id="day-pills-bar" class="flex flex-wrap items-center gap-1.5"></div>
+              <div class="flex flex-wrap items-center gap-2">
+                <div id="day-pills-bar" class="flex flex-wrap items-center gap-1.5"></div>
+                <span id="active-meals-menu-badge" class="text-[11px] font-extrabold text-forest-800 bg-emerald-50 px-2.5 py-1 rounded-xl border border-emerald-200">
+                  🍽️ 5 refeições/dia • 100% das metas
+                </span>
+              </div>
               <div class="flex flex-wrap items-center gap-2">
                 <button type="button" onclick="rotateWeeklyVariation()" class="px-3 py-1.5 rounded-xl text-xs font-bold border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-forest-800 transition">
                   🔀 Gerar Nova Variação
@@ -1625,6 +1666,80 @@
       { id: 'dom', short: 'Dom', full: 'Domingo', isTrainDefault: false }
     ];
 
+    // Configuração flexível dos 7 slots possíveis de refeição ao longo do dia
+    const DEFAULT_MEAL_SLOTS_CONFIG = [
+      {
+        id: 'breakfast',
+        label: 'Café da Manhã',
+        slotTitle: 'CAFÉ DA MANHÃ',
+        time: '07h00',
+        enabled: true,
+        pWeight: 20,
+        cWeight: 20,
+        allowedTypes: ['breakfast']
+      },
+      {
+        id: 'morning_snack',
+        label: 'Lanche da Manhã',
+        slotTitle: 'LANCHE DA MANHÃ (RUA)',
+        time: '10h00',
+        enabled: true,
+        pWeight: 14,
+        cWeight: 15,
+        allowedTypes: ['snack', 'breakfast']
+      },
+      {
+        id: 'lunch',
+        label: 'Almoço Principal',
+        slotTitle: 'ALMOÇO ESTRATÉGICO',
+        time: '12h30',
+        enabled: true,
+        pWeight: 32,
+        cWeight: 30,
+        allowedTypes: ['lunch']
+      },
+      {
+        id: 'afternoon_pre',
+        label: 'Lanche da Tarde / Pré-Treino',
+        slotTitle: 'LANCHE DA TARDE / PRÉ-TREINO',
+        time: '15h30',
+        enabled: true,
+        pWeight: 14,
+        cWeight: 17,
+        allowedTypes: ['snack', 'pre']
+      },
+      {
+        id: 'post_workout',
+        label: 'Pós-Treino / Shake Rápido',
+        slotTitle: 'PÓS-TREINO / SHAKE PROTEICO',
+        time: '17h30',
+        enabled: false,
+        pWeight: 15,
+        cWeight: 15,
+        allowedTypes: ['post', 'snack']
+      },
+      {
+        id: 'dinner',
+        label: 'Jantar Principal',
+        slotTitle: 'JANTAR EM CASA',
+        time: '20h00',
+        enabled: true,
+        pWeight: 26,
+        cWeight: 20,
+        allowedTypes: ['dinner']
+      },
+      {
+        id: 'supper',
+        label: 'Ceia Noturna',
+        slotTitle: 'CEIA NOTURNA LEVE',
+        time: '22h00',
+        enabled: false,
+        pWeight: 12,
+        cWeight: 10,
+        allowedTypes: ['snack', 'breakfast']
+      }
+    ];
+
     const appState = {
       profile: {
         name: '',
@@ -1639,7 +1754,9 @@
         workoutTime: 'tarde',
         proteinRatio: 2.0,
         routine: 'misto',
-        lowOil: true
+        lowOil: true,
+        mealsPerDayPreset: 5,
+        mealSlots: JSON.parse(JSON.stringify(DEFAULT_MEAL_SLOTS_CONFIG))
       },
       pantry: {},
       targets: {
@@ -1800,73 +1917,184 @@
     }
 
     /* ==========================================================================
-       5. ESTRUTURA DE HORÁRIOS E ESCALONAMENTO MATEMÁTICO DAS PORÇÕES
+       5. ESTRUTURA FLEXÍVEL DE REFEIÇÕES E ESCALONAMENTO MATEMÁTICO (100% MACROS)
        ========================================================================== */
+    function ensureMealSlotsInitialized() {
+      if (!Array.isArray(appState.profile.mealSlots) || appState.profile.mealSlots.length === 0) {
+        appState.profile.mealSlots = JSON.parse(JSON.stringify(DEFAULT_MEAL_SLOTS_CONFIG));
+      }
+    }
+
+    function getActiveMealSlotsCount() {
+      ensureMealSlotsInitialized();
+      return appState.profile.mealSlots.filter(s => s.enabled).length;
+    }
+
+    function applyMealCountPreset(count) {
+      ensureMealSlotsInitialized();
+      appState.profile.mealsPerDayPreset = count;
+
+      // Define quais slots ficam ativos em cada preset rápido (3, 4, 5 ou 6 refeições)
+      const presetMap = {
+        3: ['breakfast', 'lunch', 'dinner'],
+        4: ['breakfast', 'lunch', 'afternoon_pre', 'dinner'],
+        5: ['breakfast', 'morning_snack', 'lunch', 'afternoon_pre', 'dinner'],
+        6: ['breakfast', 'morning_snack', 'lunch', 'afternoon_pre', 'post_workout', 'dinner']
+      };
+
+      const activeIds = presetMap[count] || presetMap[5];
+      appState.profile.mealSlots.forEach(slot => {
+        slot.enabled = activeIds.includes(slot.id);
+      });
+
+      appState.customOverrides = {};
+      saveProfileToLocalStorage();
+      if (hasValidProfile()) generateWeeklyPlan();
+      renderAll();
+      showToast(`🍽️ Cardápio ajustado para ${count} refeições por dia (100% das metas redistribuídas)!`);
+    }
+
+    function toggleCustomMealSlot(slotId) {
+      ensureMealSlotsInitialized();
+      const target = appState.profile.mealSlots.find(s => s.id === slotId);
+      if (!target) return;
+
+      const activeCount = getActiveMealSlotsCount();
+      if (target.enabled && activeCount <= 2) {
+        showToast('⚠️ Mantenha pelo menos 2 refeições ativas por dia para distribuir suas metas!');
+        return;
+      }
+
+      target.enabled = !target.enabled;
+      appState.profile.mealsPerDayPreset = getActiveMealSlotsCount();
+      appState.customOverrides = {};
+      saveProfileToLocalStorage();
+      if (hasValidProfile()) generateWeeklyPlan();
+      renderAll();
+      const newCount = getActiveMealSlotsCount();
+      showToast(`🍽️ ${target.label} ${target.enabled ? 'incluído' : 'removido'} (${newCount} refeições/dia)!`);
+    }
+
+    function updateCustomMealSlotTime(slotId, newTimeVal) {
+      ensureMealSlotsInitialized();
+      const target = appState.profile.mealSlots.find(s => s.id === slotId);
+      if (!target) return;
+      target.time = (newTimeVal || '').trim() || target.time;
+      saveProfileToLocalStorage();
+      if (hasValidProfile()) generateWeeklyPlan();
+      renderWeeklyMenuCards();
+    }
+
+    function toggleCustomSlotsEditor() {
+      const listEl = document.getElementById('custom-meal-slots-list');
+      if (!listEl) return;
+      listEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      showToast('Marque/desmarque abaixo quais refeições deseja fazer e edite os horários!');
+    }
+
+    function renderMealSlotsSelectorUI() {
+      ensureMealSlotsInitialized();
+      const activeCount = getActiveMealSlotsCount();
+
+      const sideBadge = document.getElementById('meals-count-sidebar-badge');
+      if (sideBadge) sideBadge.textContent = `${activeCount} refeições/dia`;
+
+      const menuBadge = document.getElementById('active-meals-menu-badge');
+      if (menuBadge) menuBadge.textContent = `🍽️ ${activeCount} refeições/dia • 100% das metas distribuídas`;
+
+      // Atualiza destaque dos botões de preset (3, 4, 5, 6)
+      [3, 4, 5, 6].forEach(n => {
+        const btn = document.getElementById(`preset-meals-${n}`);
+        if (!btn) return;
+        const isCurrent = activeCount === n;
+        btn.className = isCurrent
+          ? 'py-1.5 px-1 rounded-lg text-[11px] font-extrabold border border-forest-800 bg-forest-800 text-white transition shadow-2xs'
+          : 'py-1.5 px-1 rounded-lg text-[11px] font-extrabold border border-bordersoft bg-white text-slate-700 hover:bg-forest-50 transition';
+      });
+
+      const customBtn = document.getElementById('preset-meals-custom');
+      if (customBtn) {
+        const isCustomCount = ![3, 4, 5, 6].includes(activeCount);
+        customBtn.className = isCustomCount
+          ? 'py-1.5 px-1 rounded-lg text-[11px] font-extrabold border border-forest-800 bg-forest-800 text-white transition shadow-2xs'
+          : 'py-1.5 px-1 rounded-lg text-[11px] font-extrabold border border-bordersoft bg-white text-slate-700 hover:bg-forest-50 transition';
+      }
+
+      // Calcula % aproximada de calorias/proteínas de cada slot ativo para mostrar transparência ao usuário
+      const enabledSlots = appState.profile.mealSlots.filter(s => s.enabled);
+      const totalWeight = enabledSlots.reduce((sum, s) => sum + ((s.pWeight + s.cWeight) / 2), 0) || 1;
+
+      const listEl = document.getElementById('custom-meal-slots-list');
+      if (!listEl) return;
+
+      listEl.innerHTML = appState.profile.mealSlots.map(slot => {
+        const pct = slot.enabled ? Math.round((((slot.pWeight + slot.cWeight) / 2) / totalWeight) * 100) : 0;
+        const rowBg = slot.enabled ? 'bg-white border-emerald-300' : 'bg-slate-100/70 border-slate-200 opacity-65';
+        return `
+          <div class="flex items-center justify-between gap-1.5 px-2.5 py-1.5 rounded-xl border ${rowBg} transition">
+            <label class="flex items-center gap-2 text-xs font-bold text-slate-800 cursor-pointer flex-1 min-w-0">
+              <input type="checkbox" ${slot.enabled ? 'checked' : ''} onchange="toggleCustomMealSlot('${slot.id}')" class="rounded text-forest-800 w-3.5 h-3.5 shrink-0" />
+              <span class="truncate">${slot.label}</span>
+            </label>
+            <div class="flex items-center gap-1.5 shrink-0">
+              ${slot.enabled ? `<span class="text-[10px] font-extrabold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">~${pct}%</span>` : `<span class="text-[10px] text-slate-400">Inativo</span>`}
+              <input type="text" value="${slot.time}" onchange="updateCustomMealSlotTime('${slot.id}', this.value)" style="width: 58px; padding: 3px 6px; font-size: 11px; text-align: center; font-weight: 700;" title="Horário da refeição" />
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
     function getSlotsForDay(isTrainDay) {
+      ensureMealSlotsInitialized();
       const wt = appState.profile.workoutTime;
-      // Se Sedentário (0x/sem), oculta Pré e Pós-Treino e distribui em 5 refeições ao longo do dia
-      if (appState.profile.freq === 0) {
-        return [
-          { slotKey: 'breakfast', time: '07h30', title: 'CAFÉ DA MANHÃ', pShare: 0.20, cShare: 0.22, allowedTypes: ['breakfast'] },
-          { slotKey: 'snack',     time: '10h30', title: 'LANCHE DA MANHÃ', pShare: 0.14, cShare: 0.16, allowedTypes: ['snack'] },
-          { slotKey: 'lunch',     time: '12h45', title: 'ALMOÇO PRINCIPAL', pShare: 0.30, cShare: 0.28, allowedTypes: ['lunch'] },
-          { slotKey: 'snack',     time: '16h30', title: 'LANCHE DA TARDE', pShare: 0.14, cShare: 0.16, allowedTypes: ['snack'] },
-          { slotKey: 'dinner',    time: '20h00', title: 'JANTAR SACIANTE', pShare: 0.22, cShare: 0.18, allowedTypes: ['dinner'] }
-        ];
+      const isSedentary = appState.profile.freq === 0;
+
+      // Filtra as refeições que o usuário marcou como ativas
+      let activeSlots = appState.profile.mealSlots.filter(s => s.enabled);
+
+      // Segurança caso todas tenham sido desmarcadas
+      if (activeSlots.length < 2) {
+        activeSlots = DEFAULT_MEAL_SLOTS_CONFIG.filter(s => ['breakfast', 'lunch', 'dinner'].includes(s.id));
       }
 
-      // Dias de descanso (Sábado e Domingo) para praticantes de musculação
-      if (!isTrainDay) {
-        return [
-          { slotKey: 'breakfast', time: '08h00', title: 'CAFÉ DA MANHÃ', pShare: 0.20, cShare: 0.22, allowedTypes: ['breakfast'] },
-          { slotKey: 'lunch',     time: '12h30', title: 'ALMOÇO PRINCIPAL', pShare: 0.34, cShare: 0.34, allowedTypes: ['lunch'] },
-          { slotKey: 'snack',     time: '16h30', title: 'LANCHE DA TARDE', pShare: 0.18, cShare: 0.22, allowedTypes: ['snack'] },
-          { slotKey: 'dinner',    time: '20h00', title: 'JANTAR SACIANTE', pShare: 0.28, cShare: 0.22, allowedTypes: ['dinner'] }
-        ];
-      }
+      // Soma total dos pesos das refeições ativas para normalizar sempre em 100% (1.00)
+      const totalPWeight = activeSlots.reduce((acc, s) => acc + s.pWeight, 0) || 100;
+      const totalCWeight = activeSlots.reduce((acc, s) => acc + s.cWeight, 0) || 100;
 
-      if (wt === 'manha') {
-        return [
-          { slotKey: 'pre',       time: '05h30', title: 'PRÉ-TREINO MATINAL (TREINO 06h00)', pShare: 0.05, cShare: 0.15, allowedTypes: ['pre'] },
-          { slotKey: 'breakfast', time: '07h15', title: 'PÓS-TREINO / CAFÉ DA MANHÃ', pShare: 0.22, cShare: 0.22, allowedTypes: ['breakfast', 'post'] },
-          { slotKey: 'snack',     time: '10h15', title: 'LANCHE DA MANHÃ (RUA)', pShare: 0.15, cShare: 0.15, allowedTypes: ['snack'] },
-          { slotKey: 'lunch',     time: '12h45', title: 'ALMOÇO ESTRATÉGICO', pShare: 0.28, cShare: 0.25, allowedTypes: ['lunch'] },
-          { slotKey: 'post',      time: '16h15', title: 'LANCHE DA TARDE (RUA)', pShare: 0.10, cShare: 0.10, allowedTypes: ['snack', 'post'] },
-          { slotKey: 'dinner',    time: '20h00', title: 'JANTAR EM CASA', pShare: 0.20, cShare: 0.13, allowedTypes: ['dinner'] }
-        ];
-      }
+      return activeSlots.map(slot => {
+        let dynamicTitle = slot.slotTitle;
+        let allowed = [...slot.allowedTypes];
 
-      if (wt === 'almoco') {
-        return [
-          { slotKey: 'breakfast', time: '07h00', title: 'CAFÉ DA MANHÃ', pShare: 0.16, cShare: 0.16, allowedTypes: ['breakfast'] },
-          { slotKey: 'pre',       time: '11h00', title: 'PRÉ-TREINO (TREINO 12h00)', pShare: 0.08, cShare: 0.16, allowedTypes: ['pre', 'snack'] },
-          { slotKey: 'lunch',     time: '13h15', title: 'PÓS-TREINO / ALMOÇO PRINCIPAL', pShare: 0.30, cShare: 0.28, allowedTypes: ['lunch'] },
-          { slotKey: 'post',      time: '16h30', title: 'LANCHE PROTEICO DA TARDE', pShare: 0.16, cShare: 0.14, allowedTypes: ['post', 'snack'] },
-          { slotKey: 'snack',     time: '18h30', title: 'LANCHE RÁPIDO DE RUA', pShare: 0.10, cShare: 0.11, allowedTypes: ['snack'] },
-          { slotKey: 'dinner',    time: '20h30', title: 'JANTAR EM CASA', pShare: 0.20, cShare: 0.15, allowedTypes: ['dinner'] }
-        ];
-      }
+        // Adapta o título da tarde/pós-treino conforme se é dia de treino ou descanso
+        if (slot.id === 'afternoon_pre') {
+          if (isTrainDay && !isSedentary) {
+            const wtLabels = { manha: 'TREINO 06h00', almoco: 'TREINO 12h00', tarde: 'TREINO 15h00', noite: 'TREINO 19h00' };
+            dynamicTitle = `PRÉ-TREINO / LANCHE (${wtLabels[wt] || 'TREINO'})`;
+            allowed = ['pre', 'snack'];
+          } else {
+            dynamicTitle = 'LANCHE DA TARDE SACIANTE';
+            allowed = ['snack'];
+          }
+        } else if (slot.id === 'post_workout') {
+          if (isTrainDay && !isSedentary) {
+            dynamicTitle = 'PÓS-TREINO / RECUPERAÇÃO';
+            allowed = ['post', 'snack'];
+          } else {
+            dynamicTitle = 'LANCHE PROTEICO COMPLEMENTAR';
+            allowed = ['snack', 'post'];
+          }
+        }
 
-      if (wt === 'noite') {
-        return [
-          { slotKey: 'breakfast', time: '07h00', title: 'CAFÉ DA MANHÃ', pShare: 0.16, cShare: 0.16, allowedTypes: ['breakfast'] },
-          { slotKey: 'snack',     time: '10h00', title: 'LANCHE DA MANHÃ (RUA)', pShare: 0.16, cShare: 0.16, allowedTypes: ['snack'] },
-          { slotKey: 'lunch',     time: '12h30', title: 'ALMOÇO ESTRATÉGICO', pShare: 0.28, cShare: 0.24, allowedTypes: ['lunch'] },
-          { slotKey: 'pre',       time: '18h00', title: 'PRÉ-TREINO (TREINO 19h00)', pShare: 0.06, cShare: 0.15, allowedTypes: ['pre'] },
-          { slotKey: 'post',      time: '20h15', title: 'PÓS-TREINO IMEDIATO', pShare: 0.14, cShare: 0.14, allowedTypes: ['post'] },
-          { slotKey: 'dinner',    time: '21h15', title: 'JANTAR DE RECUPERAÇÃO', pShare: 0.20, cShare: 0.15, allowedTypes: ['dinner'] }
-        ];
-      }
-
-      // Padrão Tarde (15h00)
-      return [
-        { slotKey: 'breakfast', time: '07h00', title: 'CAFÉ DA MANHÃ', pShare: 0.15, cShare: 0.15, allowedTypes: ['breakfast'] },
-        { slotKey: 'snack',     time: '10h00', title: 'LANCHE DA MANHÃ (RUA)', pShare: 0.16, cShare: 0.18, allowedTypes: ['snack'] },
-        { slotKey: 'lunch',     time: '12h30', title: 'ALMOÇO ESTRATÉGICO', pShare: 0.28, cShare: 0.24, allowedTypes: ['lunch'] },
-        { slotKey: 'pre',       time: '14h15', title: 'PRÉ-TREINO (TREINO 15h00)', pShare: 0.04, cShare: 0.13, allowedTypes: ['pre'] },
-        { slotKey: 'post',      time: '16h30', title: 'PÓS-TREINO', pShare: 0.15, cShare: 0.15, allowedTypes: ['post'] },
-        { slotKey: 'dinner',    time: '20h00', title: 'JANTAR EM CASA', pShare: 0.22, cShare: 0.15, allowedTypes: ['dinner'] }
-      ];
+        return {
+          slotKey: slot.id === 'lunch' ? 'lunch' : (slot.id === 'dinner' ? 'dinner' : slot.id),
+          time: slot.time,
+          title: dynamicTitle,
+          pShare: slot.pWeight / totalPWeight,
+          cShare: slot.cWeight / totalCWeight,
+          allowedTypes: allowed
+        };
+      });
     }
 
     function clampAndSnap(val, min, max, step) {
@@ -1878,16 +2106,24 @@
       const qtyMap = {};
       let fixedP = 0, fixedC = 0, fixedF = 0;
 
+      // Se o usuário escolheu poucas refeições por dia (ex: 2 ou 3 refeições), cada refeição concentra mais macros,
+      // então expandimos proporcionalmente o teto máximo da porção para bater 100% da meta diária.
+      const activeCount = getActiveMealSlotsCount();
+      const maxPortionBoost = activeCount <= 3 ? 1.45 : (activeCount === 4 ? 1.20 : 1.0);
+
       // 1. Componentes de quantidade fixa (se estiverem ativos na despensa)
       tpl.components.forEach(comp => {
         if (comp.optional && !appState.pantry[comp.key]) return;
         const ing = INGREDIENTS[comp.key];
         if (!ing) return;
         if (comp.fixedQty) {
-          qtyMap[comp.key] = comp.fixedQty;
-          fixedP += comp.fixedQty * ing.p;
-          fixedC += comp.fixedQty * ing.c;
-          fixedF += comp.fixedQty * ing.f;
+          const scaledFixed = activeCount <= 3 && ing.unit !== 'un'
+            ? clampAndSnap(comp.fixedQty * 1.25, ing.min, Math.round(ing.max * maxPortionBoost), ing.step)
+            : comp.fixedQty;
+          qtyMap[comp.key] = scaledFixed;
+          fixedP += scaledFixed * ing.p;
+          fixedC += scaledFixed * ing.c;
+          fixedF += scaledFixed * ing.f;
         }
       });
 
@@ -1897,7 +2133,8 @@
         const ing = INGREDIENTS[pComp.key];
         const remP = Math.max(4, targetP - fixedP);
         const rawQty = remP / Math.max(0.05, ing.p);
-        const finalQty = clampAndSnap(rawQty, ing.min, ing.max, ing.step);
+        const boostedMax = ing.unit === 'un' ? Math.min(8, Math.ceil(ing.max * maxPortionBoost)) : Math.round(ing.max * maxPortionBoost);
+        const finalQty = clampAndSnap(rawQty, ing.min, boostedMax, ing.step);
         qtyMap[pComp.key] = finalQty;
         fixedP += finalQty * ing.p;
         fixedC += finalQty * ing.c;
@@ -1910,7 +2147,8 @@
         const ing = INGREDIENTS[cComp.key];
         const remC = Math.max(6, targetC - fixedC);
         const rawQty = remC / Math.max(0.05, ing.c);
-        const finalQty = clampAndSnap(rawQty, ing.min, ing.max, ing.step);
+        const boostedMax = Math.round(ing.max * maxPortionBoost);
+        const finalQty = clampAndSnap(rawQty, ing.min, boostedMax, ing.step);
         qtyMap[cComp.key] = finalQty;
       }
 
@@ -2152,6 +2390,12 @@
         document.getElementById('input-protein-ratio').value = saved.proteinRatio || 2.0;
         document.getElementById('input-routine').value = saved.routine || 'misto';
         document.getElementById('input-low-oil').checked = saved.lowOil !== false;
+        if (Array.isArray(saved.mealSlots) && saved.mealSlots.length > 0) {
+          appState.profile.mealSlots = saved.mealSlots;
+        }
+        if (saved.mealsPerDayPreset) {
+          appState.profile.mealsPerDayPreset = saved.mealsPerDayPreset;
+        }
         return true;
       } catch (e) {
         return false;
@@ -2531,6 +2775,8 @@
       document.getElementById('input-protein-ratio').value = 2.0;
       document.getElementById('input-routine').value = 'misto';
       document.getElementById('input-low-oil').checked = true;
+      appState.profile.mealsPerDayPreset = 5;
+      appState.profile.mealSlots = JSON.parse(JSON.stringify(DEFAULT_MEAL_SLOTS_CONFIG));
 
       appState.customOverrides = {};
       appState.variationSeed = 0;
@@ -3574,6 +3820,7 @@
     }
 
     function renderAll() {
+      renderMealSlotsSelectorUI();
       renderPantryChips();
       renderTacoReferenceTable();
       const valid = hasValidProfile();
